@@ -18,6 +18,19 @@ The integration runs the actual Minecraft Java simulation and the actual ULTRAKI
 - **O:** Minecraft options/menu.
 - **G:** use the gun terminal when nearby.
 - **T** / **/**: Java chat / commands.
+## Easy install for players
+
+Download `UltraCraft.exe` from the Releases page and run it, then press **Play**. The first time it:
+
+- finds ULTRAKILL through Steam, installs BepInEx 5.4.23.5 if needed and adds the UltraCraft plugin;
+- downloads Prism Launcher, Java 25 and Fabric API from their official releases into `%LOCALAPPDATA%\UltraCraft`
+  and sets up a Minecraft 26.3 + Fabric instance with the UltraCraft mod;
+- opens Prism once so you can sign in with your own Microsoft account (you need to own Minecraft Java Edition).
+
+After that, **Play** starts Minecraft hidden and ULTRAKILL through Steam. **Reset world** backs up your world and
+makes a new one with a random seed next time. The program is built by `tools/launcher/build.ps1` with the plugin,
+shader bundle and mod jar embedded.
+
 **Desktop launcher:** `UltraCraft.exe` on the Desktop starts the hidden Java companion and then ULTRAKILL; quitting ULTRAKILL saves and closes Java. Rebuild it with `tools/launcher/build.ps1`.
 
 - **H:** return to camp.
