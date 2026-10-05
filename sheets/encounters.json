@@ -1,0 +1,46 @@
+{
+  "columns": [
+    "id",
+    "waves",
+    "min_radius_blocks",
+    "max_radius_blocks",
+    "navmesh_radius_blocks",
+    "navmesh_climb_blocks",
+    "system",
+    "auto_next_delay_seconds",
+    "night_start_ticks",
+    "night_end_ticks"
+  ],
+  "rows": [
+    {
+      "id": "waves",
+      "waves": "Filth:4|Filth:4,Stray:2|Filth:3,Stray:2,Schism:1|Stray:2,Schism:2,Soldier:2,Drone:2|Filth:4,Soldier:2,Drone:3,Streetcleaner:1|Schism:2,Soldier:2,Drone:2,Swordsmachine:1,MaliciousFace:1|Stray:3,Drone:3,Cerberus:1,Mindflayer:1",
+      "min_radius_blocks": 10,
+      "max_radius_blocks": 18,
+      "navmesh_radius_blocks": 48,
+      "navmesh_climb_blocks": 1.1,
+      "system": "encounters",
+      "auto_next_delay_seconds": 6,
+      "night_start_ticks": 13000,
+      "night_end_ticks": 23000
+    }
+  ],
+  "references": {
+    "system": "systems"
+  },
+  "evidence": "User asked (2026-10-05, third play test) to replace the trial area with a wave spawn button. Each press spawns the next wave around the player on real Java terrain; after the last wave the last composition repeats with one extra enemy per type per repeat. EnemyType names verified against the local game's EnemyType enum (work/game-read/EnemyType.cs); prefabs come from the game's SpawnableObjectsDatabase.enemies at runtime and missing ones are skipped with a warning. A runtime navmesh follows the player so wave and Spawner Arm enemies can walk; climb of 1.1 blocks lets ground enemies step up one Java block. Fourth play test: the user expected the next wave after clearing one, so once J starts waves each cleared wave is followed by the next after a short delay; J still spawns the next one immediately. Fifth play test: no wave key. Every Minecraft night (day time 13000-23000, when vanilla monsters spawn) starts at wave 1 and advances after each clear; no new wave starts after dawn. Surface natural replacements are paused while night waves run so the two don't stack.",
+  "checked": {
+    "waves": [
+      "id",
+      "waves",
+      "min_radius_blocks",
+      "max_radius_blocks",
+      "navmesh_radius_blocks",
+      "navmesh_climb_blocks",
+      "system",
+      "auto_next_delay_seconds",
+      "night_start_ticks",
+      "night_end_ticks"
+    ]
+  }
+}

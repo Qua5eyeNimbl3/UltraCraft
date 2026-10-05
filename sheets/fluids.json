@@ -1,0 +1,31 @@
+{
+  "columns": [
+    "id",
+    "message_type",
+    "layer",
+    "system",
+    "active_radius_blocks"
+  ],
+  "rows": [
+    {
+      "id": "water",
+      "message_type": 16,
+      "layer": 4,
+      "system": "water",
+      "active_radius_blocks": 32
+    }
+  ],
+  "references": {
+    "system": "systems"
+  },
+  "evidence": "Native Water reads layer 4 surfaces and applies native water forces. New message carries merged axis-aligned Java fluid volumes.",
+  "checked": {
+    "water": [
+      "id",
+      "message_type",
+      "layer",
+      "system",
+      "active_radius_blocks"
+    ]
+  }
+}

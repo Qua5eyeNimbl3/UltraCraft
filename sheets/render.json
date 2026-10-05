@@ -1,0 +1,82 @@
+{
+  "columns": [
+    "id",
+    "opaque_shader",
+    "cutout_shader",
+    "transparent_shader",
+    "sky_color",
+    "system",
+    "shader_bundle",
+    "lightmap_texture_id",
+    "shadow_strength",
+    "shadow_distance_blocks",
+    "sun_rotation",
+    "overlay_scale",
+    "shadow_cascades",
+    "dusk_sky_color",
+    "night_sky_color",
+    "night_tint",
+    "moon_color",
+    "fog_day_start_blocks",
+    "fog_day_end_blocks",
+    "fog_night_start_blocks",
+    "fog_night_end_blocks",
+    "night_fog_color"
+  ],
+  "rows": [
+    {
+      "id": "native",
+      "opaque_shader": "UltraCraft/World",
+      "cutout_shader": "UltraCraft/World",
+      "transparent_shader": "UltraCraft/World",
+      "sky_color": "#8fc5e8",
+      "system": "world_render",
+      "shader_bundle": "ultracraft-shaders",
+      "lightmap_texture_id": 65534,
+      "shadow_strength": 0.55,
+      "shadow_distance_blocks": 48,
+      "sun_rotation": "50,-30,0",
+      "overlay_scale": 0.5,
+      "shadow_cascades": 2,
+      "dusk_sky_color": "#d8613a",
+      "night_sky_color": "#2a0306",
+      "night_tint": "0.42,0.17,0.15",
+      "moon_color": "#8a2418",
+      "fog_day_start_blocks": 72,
+      "fog_day_end_blocks": 126,
+      "fog_night_start_blocks": 12,
+      "fog_night_end_blocks": 70,
+      "night_fog_color": "#1c0204"
+    }
+  ],
+  "references": {
+    "system": "systems"
+  },
+  "evidence": "Own shader built for Unity 2022.3.29f1. Ordinary perspective transforms, Java face tint/AO and exact Java lightmap; alpha-test depth and shadow caster; bridge-owned directional shadow light. Specification, GPU verification pending. Fourth play test reported poor performance: the Java HUD/hand overlay is rendered and uploaded at half resolution (a 2560x1440 RGBA frame was copied and uploaded every frame), terrain sections are merged into one renderer per chunk column, and shadows use two cascades over 48 blocks. Fifth play test asked for a darker night with a blood sky. Java sends the overworld clock each second; the host moves the sun/moon with it, fades the sky through a sunset to a near-black blood red, tints Java terrain and models red, swaps the sun for a dim red moon and closes in a dark red fog (own shader gains Unity fog). Day fog sits just inside the 8-chunk view so terrain edges fade.",
+  "checked": {
+    "native": [
+      "id",
+      "opaque_shader",
+      "cutout_shader",
+      "transparent_shader",
+      "sky_color",
+      "system",
+      "shader_bundle",
+      "lightmap_texture_id",
+      "shadow_strength",
+      "shadow_distance_blocks",
+      "sun_rotation",
+      "overlay_scale",
+      "shadow_cascades",
+      "dusk_sky_color",
+      "night_sky_color",
+      "night_tint",
+      "moon_color",
+      "fog_day_start_blocks",
+      "fog_day_end_blocks",
+      "fog_night_start_blocks",
+      "fog_night_end_blocks",
+      "night_fog_color"
+    ]
+  }
+}

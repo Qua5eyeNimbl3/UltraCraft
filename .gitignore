@@ -1,0 +1,11 @@
+java/.gradle/
+java/build/
+host/bin/
+host/obj/
+*.user
+*.pdb
+accounts.json
+launcher_accounts.json
+dev-command.txt
+runtime/
+private/

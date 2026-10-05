@@ -1,0 +1,227 @@
+{
+  "columns": [
+    "id",
+    "driver",
+    "hook",
+    "policy",
+    "test"
+  ],
+  "rows": [
+    {
+      "id": "movement",
+      "driver": "ULTRAKILL",
+      "hook": "native_player",
+      "policy": "native movement owns feet and grounded state; initialize alive native movement on adoption; Java screens suspend and restore only bridge-owned movement/camera state; preserve native pause and death; integrated server player chunk tracking follows native position every tick",
+      "test": "active/enabled/dynamic body after adoption; Java-screen suspend/resume round trip; manual walk, jump, dash, slide and wall jump on Java block collisions"
+    },
+    {
+      "id": "mining",
+      "driver": "Minecraft Java",
+      "hook": "java_input",
+      "policy": "forward held left mouse in building mode; vanilla survival mining",
+      "test": "break log, pick up item, mine stone with correct tool"
+    },
+    {
+      "id": "building",
+      "driver": "Minecraft Java",
+      "hook": "java_input",
+      "policy": "forward right mouse in building mode; vanilla placement",
+      "test": "place block, collide with it, break it, save and reload"
+    },
+    {
+      "id": "crafting",
+      "driver": "Minecraft Java",
+      "hook": "java_input",
+      "policy": "vanilla inventory and crafting table screens",
+      "test": "log to planks, planks to crafting table, craft a pickaxe"
+    },
+    {
+      "id": "inventory",
+      "driver": "Minecraft Java",
+      "hook": "java_input",
+      "policy": "native Java inventory and hotbar overlay; Escape closes Java screens without opening the native pause menu",
+      "test": "open inventory, move stacks, select hotbar slots"
+    },
+    {
+      "id": "world_render",
+      "driver": "Minecraft Java plus Unity",
+      "hook": "java_render",
+      "policy": "own stable depth-writing shader, alpha cutout and transparent water; preserve Java face shading, AO and live lightmap; directional light casts shadows; stream geometry, textures, mobs and collisions across scene loads; mipmapped block atlas and stable-fit shadow cascades against shimmer; hide native sandbox map geometry and collision after adoption; Minecraft-style dark block outline only in build mode; break cracks drawn from the Java destroy stage; day/night from the Java clock: moving sun/moon, sunset, blood-red night sky, red terrain tint and fog",
+      "test": "GPU opaque/cutout depth, cutout holes, vertex tint, lightmap contrast, cast-shadow comparison and smooth projected motion; manual terrain/camera test"
+    },
+    {
+      "id": "weapons",
+      "driver": "ULTRAKILL",
+      "hook": "native_guns",
+      "policy": "preserve native guns, variants, damage and combat; native weapon hits on Minecraft-mob hitboxes become Minecraft damage; Minecraft melee/arrow hits on mirrored native enemies become native damage",
+      "test": "shoot a Minecraft cow/zombie with the revolver and see it take damage; hit a Filth with a Minecraft sword in build mode and see it take damage"
+    },
+    {
+      "id": "terminal",
+      "driver": "ULTRAKILL",
+      "hook": "native_terminal",
+      "policy": "move native gun-selection terminal near Java spawn",
+      "test": "open actual terminal and change equipped weapon"
+    },
+    {
+      "id": "encounters",
+      "driver": "ULTRAKILL",
+      "hook": "native_enemies",
+      "policy": "no wave key; every night (Java day time 13000-23000) runs native enemy waves around the player, next wave after each clear, none started after dawn; navmesh follows the player; enemies stand on Java collision; stuck watchdog re-seats enemies off the navmesh, stranded far away or fallen through terrain",
+      "test": "at nightfall wave 1 appears without pressing anything; clearing it brings wave 2; daytime brings no new waves"
+    },
+    {
+      "id": "saving",
+      "driver": "Minecraft Java",
+      "hook": "java_world",
+      "policy": "dedicated UltraCraft world; native Java autosave and graceful shutdown; desktop reset tool backs up then removes the save (only on the user's confirmation), next launch creates a new world with a random seed",
+      "test": "reload same block changes and inventory"
+    },
+    {
+      "id": "launch",
+      "driver": "Melty plus companion launcher",
+      "hook": "native_scene",
+      "policy": "BepInEx 5 host; fully automatic bundled Java companion setup; wait for idle native scene loading, keep the bridge running in the background",
+      "test": "Melty installs package, sets up Java, launches both and links"
+    },
+    {
+      "id": "water",
+      "driver": "Minecraft Java plus ULTRAKILL",
+      "hook": "native_water",
+      "policy": "export merged real Java water volumes; create native layer-4 Water triggers after sandbox loads",
+      "test": "enter water, sink slowly, swim/jump upward, dash and leave; placed water updates volume"
+    },
+    {
+      "id": "commands",
+      "driver": "Minecraft Java",
+      "hook": "java_input",
+      "policy": "route T and slash to vanilla chat/command screen, then route text and keyboard while open",
+      "test": "open commands using slash, enter /time query daytime, receive result without native pause"
+    },
+    {
+      "id": "natural_spawns",
+      "driver": "Minecraft Java plus ULTRAKILL",
+      "hook": "native_enemies",
+      "policy": "vanilla decides when and where hostile mobs may spawn; mapped hostile types become native enemies on Java terrain near the player; passive mobs unchanged",
+      "test": "at night or in a dark cave, Filth/Strays/etc. appear instead of zombies/skeletons; cows, pigs and sheep still spawn"
+    },
+    {
+      "id": "weapon_mining",
+      "driver": "ULTRAKILL plus Minecraft Java",
+      "hook": "native_guns",
+      "policy": "player weapon hits on Java terrain accumulate block damage with cracks and break blocks with drops; railcannon and player explosions break a sphere; thrown chainsaw saws contacted blocks, wood fast",
+      "test": "shoot dirt with the revolver (breaks, drops), railcannon a hillside (crater), throw the chainsaw at a tree (logs drop quickly)"
+    }
+  ],
+  "references": {
+    "hook": "hooks"
+  },
+  "checked": {
+    "movement": [
+      "id",
+      "driver",
+      "hook",
+      "policy",
+      "test"
+    ],
+    "mining": [
+      "id",
+      "driver",
+      "hook",
+      "policy",
+      "test"
+    ],
+    "building": [
+      "id",
+      "driver",
+      "hook",
+      "policy",
+      "test"
+    ],
+    "crafting": [
+      "id",
+      "driver",
+      "hook",
+      "policy",
+      "test"
+    ],
+    "inventory": [
+      "id",
+      "driver",
+      "hook",
+      "policy",
+      "test"
+    ],
+    "world_render": [
+      "id",
+      "driver",
+      "hook",
+      "policy",
+      "test"
+    ],
+    "weapons": [
+      "id",
+      "driver",
+      "hook",
+      "policy",
+      "test"
+    ],
+    "terminal": [
+      "id",
+      "driver",
+      "hook",
+      "policy",
+      "test"
+    ],
+    "encounters": [
+      "id",
+      "driver",
+      "hook",
+      "policy",
+      "test"
+    ],
+    "saving": [
+      "id",
+      "driver",
+      "hook",
+      "policy",
+      "test"
+    ],
+    "launch": [
+      "id",
+      "driver",
+      "hook",
+      "policy",
+      "test"
+    ],
+    "water": [
+      "id",
+      "driver",
+      "hook",
+      "policy",
+      "test"
+    ],
+    "commands": [
+      "id",
+      "driver",
+      "hook",
+      "policy",
+      "test"
+    ],
+    "natural_spawns": [
+      "id",
+      "driver",
+      "hook",
+      "policy",
+      "test"
+    ],
+    "weapon_mining": [
+      "id",
+      "driver",
+      "hook",
+      "policy",
+      "test"
+    ]
+  },
+  "evidence": "Approved first-build plan and verified engine hook declarations. Every test column is an acceptance requirement, not a claim of a passed test."
+}

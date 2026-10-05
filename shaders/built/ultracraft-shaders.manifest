@@ -1,0 +1,20 @@
+ManifestFileVersion: 0
+CRC: 4184789224
+Hashes:
+  AssetFileHash:
+    serializedVersion: 2
+    Hash: 44fdc5e0f21448b5af2c7931f8afcb7a
+  TypeTreeHash:
+    serializedVersion: 2
+    Hash: 0df1dec30b5d061d422d3e6493d27647
+  IncrementalBuildHash:
+    serializedVersion: 2
+    Hash: 44fdc5e0f21448b5af2c7931f8afcb7a
+HashAppended: 0
+ClassTypes:
+- Class: 48
+  Script: {instanceID: 0}
+SerializeReferenceClassIdentifiers: []
+Assets:
+- Assets/World.shader
+Dependencies: []

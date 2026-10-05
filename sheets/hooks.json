@@ -1,0 +1,154 @@
+{
+  "columns": [
+    "id",
+    "engine",
+    "type",
+    "member",
+    "source"
+  ],
+  "rows": [
+    {
+      "id": "java_world",
+      "engine": "java",
+      "type": "dev.skycraft.client.MirrorWorld",
+      "member": "openWhenReady",
+      "source": "PeakCraft/fabric/src/client/java/dev/skycraft/client/MirrorWorld.java"
+    },
+    {
+      "id": "java_link",
+      "engine": "java",
+      "type": "dev.skycraft.link.SkyLink",
+      "member": "readSkyState",
+      "source": "PeakCraft/fabric/src/main/java/dev/skycraft/link/SkyLink.java"
+    },
+    {
+      "id": "java_input",
+      "engine": "java",
+      "type": "dev.skycraft.client.InputBridge",
+      "member": "drain",
+      "source": "PeakCraft/fabric/src/client/java/dev/skycraft/client/InputBridge.java"
+    },
+    {
+      "id": "java_render",
+      "engine": "java",
+      "type": "dev.skycraft.client.render.WorldExporter",
+      "member": "frame",
+      "source": "PeakCraft/fabric/src/client/java/dev/skycraft/client/render/WorldExporter.java"
+    },
+    {
+      "id": "native_player",
+      "engine": "unity",
+      "type": "NewMovement",
+      "member": "rb",
+      "source": "game-read/NewMovement.cs"
+    },
+    {
+      "id": "native_guns",
+      "engine": "unity",
+      "type": "GunControl",
+      "member": "currentWeapon",
+      "source": "game-read/GunControl.cs"
+    },
+    {
+      "id": "native_terminal",
+      "engine": "unity",
+      "type": "ShopZone",
+      "member": "TurnOn",
+      "source": "game-read/ShopZone.cs"
+    },
+    {
+      "id": "native_scene",
+      "engine": "unity",
+      "type": "SceneHelper",
+      "member": "LoadScene",
+      "source": "game-read/SceneHelper.cs"
+    },
+    {
+      "id": "native_enemies",
+      "engine": "unity",
+      "type": "SpawnableObjectsDatabase",
+      "member": "enemies",
+      "source": "game-read/SpawnableObjectsDatabase.cs"
+    },
+    {
+      "id": "native_water",
+      "engine": "unity",
+      "type": "Water",
+      "member": "ApplyWaterForces",
+      "source": "game-read/Water.decompiled.cs"
+    }
+  ],
+  "checked": {
+    "java_world": [
+      "id",
+      "engine",
+      "type",
+      "member",
+      "source"
+    ],
+    "java_link": [
+      "id",
+      "engine",
+      "type",
+      "member",
+      "source"
+    ],
+    "java_input": [
+      "id",
+      "engine",
+      "type",
+      "member",
+      "source"
+    ],
+    "java_render": [
+      "id",
+      "engine",
+      "type",
+      "member",
+      "source"
+    ],
+    "native_player": [
+      "id",
+      "engine",
+      "type",
+      "member",
+      "source"
+    ],
+    "native_guns": [
+      "id",
+      "engine",
+      "type",
+      "member",
+      "source"
+    ],
+    "native_terminal": [
+      "id",
+      "engine",
+      "type",
+      "member",
+      "source"
+    ],
+    "native_scene": [
+      "id",
+      "engine",
+      "type",
+      "member",
+      "source"
+    ],
+    "native_enemies": [
+      "id",
+      "engine",
+      "type",
+      "member",
+      "source"
+    ],
+    "native_water": [
+      "id",
+      "engine",
+      "type",
+      "member",
+      "source"
+    ]
+  },
+  "evidence": "Members verified in the MIT bridge source or narrow local decompilation. Decompiled files remain outside the deliverable. These are specification checks; running-game verification is tracked separately."
+}

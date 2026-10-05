@@ -1,0 +1,88 @@
+{
+  "columns": [
+    "id",
+    "key",
+    "action",
+    "system"
+  ],
+  "rows": [
+    {
+      "id": "build_mode",
+      "key": "V",
+      "action": "Toggle mining/building mode and gun mode",
+      "system": "building"
+    },
+    {
+      "id": "inventory",
+      "key": "E",
+      "action": "Open Java inventory",
+      "system": "inventory"
+    },
+    {
+      "id": "java_menu",
+      "key": "O",
+      "action": "Open Java pause/options screen",
+      "system": "inventory"
+    },
+    {
+      "id": "terminal",
+      "key": "G",
+      "action": "Open native gun terminal when near it",
+      "system": "terminal"
+    },
+    {
+      "id": "chat",
+      "key": "T",
+      "action": "Open Java chat; slash opens Java commands",
+      "system": "commands"
+    },
+    {
+      "id": "camp",
+      "key": "H",
+      "action": "Return to the session camp on request",
+      "system": "movement"
+    }
+  ],
+  "references": {
+    "system": "systems"
+  },
+  "checked": {
+    "build_mode": [
+      "id",
+      "key",
+      "action",
+      "system"
+    ],
+    "inventory": [
+      "id",
+      "key",
+      "action",
+      "system"
+    ],
+    "java_menu": [
+      "id",
+      "key",
+      "action",
+      "system"
+    ],
+    "terminal": [
+      "id",
+      "key",
+      "action",
+      "system"
+    ],
+    "chat": [
+      "id",
+      "key",
+      "action",
+      "system"
+    ],
+    "camp": [
+      "id",
+      "key",
+      "action",
+      "system"
+    ]
+  },
+  "evidence": "Mod-specific default controls. Existing ULTRAKILL movement/combat bindings remain native; defaults will be exposed in loader configuration. Fifth play test: the user removed the wave key entirely; waves now come with every night."
+}

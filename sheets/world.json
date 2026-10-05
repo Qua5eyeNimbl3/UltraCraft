@@ -1,0 +1,58 @@
+{
+  "columns": [
+    "id",
+    "name",
+    "java_version",
+    "seed",
+    "preset",
+    "mode",
+    "difficulty",
+    "structures",
+    "host_scale",
+    "hook",
+    "view_distance_chunks",
+    "simulation_distance_chunks",
+    "keep_radius_chunks",
+    "seed_mode"
+  ],
+  "rows": [
+    {
+      "id": "fresh",
+      "name": "UltraCraft",
+      "java_version": "26.3",
+      "seed": 742916305,
+      "preset": "minecraft:normal",
+      "mode": "survival",
+      "difficulty": "easy",
+      "structures": true,
+      "host_scale": 2.0,
+      "hook": "java_world",
+      "view_distance_chunks": 8,
+      "simulation_distance_chunks": 6,
+      "keep_radius_chunks": 10,
+      "seed_mode": "random"
+    }
+  ],
+  "references": {
+    "hook": "hooks"
+  },
+  "checked": {
+    "fresh": [
+      "id",
+      "name",
+      "java_version",
+      "seed",
+      "preset",
+      "mode",
+      "difficulty",
+      "structures",
+      "host_scale",
+      "hook",
+      "view_distance_chunks",
+      "simulation_distance_chunks",
+      "keep_radius_chunks",
+      "seed_mode"
+    ]
+  },
+  "evidence": "User selected a fresh solo Java survival world; local 26.3 installation is present. MirrorWorld.java exposes world generation and settings. Native NewMovement playerCollider is 3.5 host units tall, hence two host units per block. Third play test: user asked for Minecraft mobs, so difficulty is easy with natural mob spawning enabled once per world (marker file ultracraft-world.properties); /difficulty and /gamerule changes the user makes afterwards are kept. View distance 8 chunks; the host drops terrain beyond 10 chunks so memory stays bounded. Fifth play test: dynamic seeds. A newly created world gets a fresh random seed (logged); the existing world keeps its seed. The desktop 'Reset UltraCraft World' tool backs up and removes the save after confirmation, so the next launch generates a new world. seed is kept only as the original world's record."
+}

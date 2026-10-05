@@ -1,0 +1,40 @@
+{
+  "columns": [
+    "id",
+    "ultrakill_to_mc_damage",
+    "mc_to_ultrakill_damage",
+    "headshot_multiplier",
+    "actor_range_blocks",
+    "max_actors",
+    "mob_proxy_layer",
+    "system"
+  ],
+  "rows": [
+    {
+      "id": "bridge",
+      "ultrakill_to_mc_damage": 10.0,
+      "mc_to_ultrakill_damage": 0.1,
+      "headshot_multiplier": 1.5,
+      "actor_range_blocks": 48,
+      "max_actors": 64,
+      "mob_proxy_layer": 10,
+      "system": "weapons"
+    }
+  ],
+  "references": {
+    "system": "systems"
+  },
+  "evidence": "User asked that ULTRAKILL guns hurt Minecraft mobs and Minecraft weapons hurt ULTRAKILL enemies. Decompiled RevolverBeam, Projectile, Nail, Explosion, Punch and Harpoon all find targets on layers 10/11 with Head/Body/Limb tags and an EnemyIdentifierIdentifier, then call EnemyIdentifier.DeliverDamage; a Harmony prefix on DeliverDamage forwards hits on Minecraft-mob hitboxes to Java. The inherited SkyCombat actor table and EV_HIT_ACTOR event mirror native enemies as invisible hittable Minecraft stand-ins. One revolver shot (multiplier 1) = 10 Minecraft damage (half a zombie); a diamond sword (7) = 0.7 native damage (kills a Filth).",
+  "checked": {
+    "bridge": [
+      "id",
+      "ultrakill_to_mc_damage",
+      "mc_to_ultrakill_damage",
+      "headshot_multiplier",
+      "actor_range_blocks",
+      "max_actors",
+      "mob_proxy_layer",
+      "system"
+    ]
+  }
+}

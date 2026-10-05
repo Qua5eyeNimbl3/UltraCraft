@@ -1,0 +1,40 @@
+{
+  "columns": [
+    "id",
+    "host_scene",
+    "mapping",
+    "loader",
+    "loader_version",
+    "guest_loader_version",
+    "system",
+    "protocol_version"
+  ],
+  "rows": [
+    {
+      "id": "main",
+      "host_scene": "uk_construct",
+      "mapping": "Local\\UltraCraft_v1",
+      "loader": "bepinex-5",
+      "loader_version": "5.4.23.5",
+      "guest_loader_version": "0.19.5",
+      "system": "launch",
+      "protocol_version": 12
+    }
+  ],
+  "references": {
+    "system": "systems"
+  },
+  "checked": {
+    "main": [
+      "id",
+      "host_scene",
+      "mapping",
+      "loader",
+      "loader_version",
+      "guest_loader_version",
+      "system",
+      "protocol_version"
+    ]
+  },
+  "evidence": "Native sandbox scene key exists in the installed addressable catalog. Melty game_info supplies host loader/version; PeakCraft declares Java 26.3 companion bridge loader 0.19.5. A fully packaged companion remains subject to actual file validation, beyond the accepted recipe design probe."
+}

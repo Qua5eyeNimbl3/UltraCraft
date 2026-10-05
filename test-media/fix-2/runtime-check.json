@@ -1,0 +1,1 @@
+{"gpuDepthPass":true,"cases":[{"surface":"Solid","shader":"psx/unlit/unlit","pass":true,"center":[1,0.9215686,0.01568628]},{"surface":"Cutout","shader":"psx/unlit/alphatest/nocull","pass":true,"center":[1,0.9215686,0.01568628]}],"nativeGrounded":false,"javaSectionCount":1314,"collisionSectionCount":2857,"waterSectionCount":0,"cameraActive":true,"mouseLocked":"Locked"}

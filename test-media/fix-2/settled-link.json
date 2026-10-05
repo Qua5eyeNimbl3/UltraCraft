@@ -1,0 +1,31 @@
+{
+  "at": "2026-10-05T13:03:34-0500",
+  "magic": "0x43594b53",
+  "version": 12,
+  "hostPid": 49380,
+  "guestPid": 45328,
+  "hostHeartbeatAgeMs": 0,
+  "guestHeartbeatAgeMs": 0,
+  "host": {
+    "seq": 14884,
+    "flags": 9,
+    "position": [
+      -449.99530029296875,
+      72.0,
+      -484.43218994140625
+    ],
+    "teleportSeq": 1
+  },
+  "guest": {
+    "seq": 7228,
+    "flags": 5,
+    "position": [
+      -449.99530029296875,
+      72.0,
+      -484.43218994140625
+    ],
+    "frameCounter": 3016
+  },
+  "renderQueueBytes": 423104,
+  "overlayFrames": 2480
+}

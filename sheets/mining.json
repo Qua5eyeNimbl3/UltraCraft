@@ -1,0 +1,58 @@
+{
+  "columns": [
+    "id",
+    "revolver_power",
+    "pellet_power",
+    "nail_power",
+    "saw_power",
+    "saw_wood_multiplier",
+    "saw_other_multiplier",
+    "railgun_radius_blocks",
+    "explosion_radius_per_unit",
+    "max_explosion_radius_blocks",
+    "blast_drop_chance",
+    "max_breakable_hardness",
+    "damage_decay_seconds",
+    "system"
+  ],
+  "rows": [
+    {
+      "id": "guns",
+      "revolver_power": 1.0,
+      "pellet_power": 0.3,
+      "nail_power": 0.2,
+      "saw_power": 0.6,
+      "saw_wood_multiplier": 6.0,
+      "saw_other_multiplier": 0.4,
+      "railgun_radius_blocks": 3.0,
+      "explosion_radius_per_unit": 0.25,
+      "max_explosion_radius_blocks": 3.0,
+      "blast_drop_chance": 0.35,
+      "max_breakable_hardness": 49.0,
+      "damage_decay_seconds": 8,
+      "system": "weapon_mining"
+    }
+  ],
+  "references": {
+    "system": "systems"
+  },
+  "evidence": "User (sixth play test) asked for weapons to mine: railcannon makes an explosive circle, the chainsaw cuts wood better and fast. Power is in Minecraft hardness units accumulated per block (dirt 0.5, stone 1.5, log 2, ore 3, obsidian 50): a revolver shot breaks dirt and most of a stone block. Hooks verified in decompiled code: RevolverBeam.HitSomething (PhysicsCastResult with point/normal/collider; BeamType Revolver/Railgun), Projectile.Collided (friendly/playerBullet), Nail.OnCollisionEnter (enemy/sawblade), Explosion.Start (maxSize, enemy, harmless), Chainsaw.FixedUpdate (thrown saw, rigidbody). Java breaks with Block.dropResources using the matching diamond tool so drops appear, and shows cracks with destroyBlockProgress. Unbreakable (hardness < 0) and very hard blocks (> 49, obsidian and up) are skipped by blasts.",
+  "checked": {
+    "guns": [
+      "id",
+      "revolver_power",
+      "pellet_power",
+      "nail_power",
+      "saw_power",
+      "saw_wood_multiplier",
+      "saw_other_multiplier",
+      "railgun_radius_blocks",
+      "explosion_radius_per_unit",
+      "max_explosion_radius_blocks",
+      "blast_drop_chance",
+      "max_breakable_hardness",
+      "damage_decay_seconds",
+      "system"
+    ]
+  }
+}

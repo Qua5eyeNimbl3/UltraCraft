@@ -1,0 +1,1 @@
+{"gpuDepthPass":false,"cases":[{"surface":"Solid","shader":"Unlit/Texture","pass":true,"center":[1,1,1]},{"surface":"Cutout","shader":"Sprites/Default","pass":false,"center":[0.05098039,0.1215686,0.8]}],"nativeGrounded":false,"javaSectionCount":1314,"collisionSectionCount":2857,"waterSectionCount":0,"cameraActive":true,"mouseLocked":"Locked"}

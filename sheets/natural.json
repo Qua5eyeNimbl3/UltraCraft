@@ -1,0 +1,43 @@
+{
+  "columns": [
+    "id",
+    "replacements",
+    "min_distance_blocks",
+    "max_distance_blocks",
+    "max_height_difference_blocks",
+    "max_alive",
+    "despawn_distance_blocks",
+    "cooldown_seconds",
+    "system"
+  ],
+  "rows": [
+    {
+      "id": "night",
+      "replacements": "zombie:Filth,husk:Filth,zombie_villager:Filth,drowned:Filth,skeleton:Stray,stray:Stray,bogged:Stray,creeper:Drone,spider:Schism,cave_spider:Schism,enderman:Virtue,witch:Mindflayer,pillager:Soldier,vindicator:Soldier",
+      "min_distance_blocks": 16,
+      "max_distance_blocks": 40,
+      "max_height_difference_blocks": 16,
+      "max_alive": 10,
+      "despawn_distance_blocks": 96,
+      "cooldown_seconds": 3,
+      "system": "natural_spawns"
+    }
+  ],
+  "references": {
+    "system": "systems"
+  },
+  "evidence": "User (fourth play test) asked to replace normal night hostile spawns with ULTRAKILL enemies (Stray replaces skeleton, Filth replaces zombie, and so on) without changing passive mobs. Java vetoes vanilla natural spawns of these monster types after vanilla's own light/position checks pass (NaturalSpawner.isValidPositionForMob, verified with javap on 26.3) and asks the host to spawn the mapped native enemy there instead. Minecraft ids from the vanilla registry; native names verified against EnemyType. Distance, height and alive caps keep the native enemies on loaded terrain and inside the navmesh; unmapped monsters (slimes etc.) stay vanilla.",
+  "checked": {
+    "night": [
+      "id",
+      "replacements",
+      "min_distance_blocks",
+      "max_distance_blocks",
+      "max_height_difference_blocks",
+      "max_alive",
+      "despawn_distance_blocks",
+      "cooldown_seconds",
+      "system"
+    ]
+  }
+}
