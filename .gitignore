@@ -9,3 +9,5 @@ launcher_accounts.json
 dev-command.txt
 runtime/
 private/
+.tools/
+dist/

@@ -1,0 +1,15 @@
+UltraCraft ships this copy of Minecraft's launcher setup so ULTRAKILL can start Minecraft by itself.
+UltraCraft doesn't include Minecraft: Prism Launcher downloads it (and Java) after you sign in with
+a Microsoft account that owns Minecraft: Java Edition.
+
+Prism Launcher 11.1.1 (this folder, the unmodified portable Windows build)
+  License: GNU General Public License v3.0 (LICENSE-PrismLauncher.txt)
+  Source:  https://github.com/PrismLauncher/PrismLauncher/tree/11.1.1
+
+Fabric API 0.161.0+26.3 (instances/UltraCraft/.minecraft/mods/fabric-api-*.jar), by FabricMC
+  License: Apache License 2.0 (LICENSE-FabricAPI.txt)
+  Source:  https://github.com/FabricMC/fabric
+
+UltraCraft (instances/UltraCraft/.minecraft/mods/ultracraft-*.jar) by Qua5eyeNimbl3, MIT License (LICENSE-UltraCraft.txt).
+  Its ULTRAKILL/Minecraft bridge comes from SkyCraft (chasmlol) and PeakCraft (aeironnsarmiento),
+  MIT License (LICENSE-SkyCraft-PeakCraft.txt).

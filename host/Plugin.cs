@@ -39,6 +39,7 @@ public sealed class Plugin:BaseUnityPlugin {
     readonly NavmeshFollower navmesh=new();
     readonly Waves waves=new();
     CrossCombat combat=null!;
+    Companion companion=null!;
     float javaDayTime=-1;
     bool focusedBefore;
     readonly JavaScreenGate screens=new();
@@ -51,18 +52,19 @@ public sealed class Plugin:BaseUnityPlugin {
       Instance=this;patches=new Harmony("local.ultracraft.bridge");patches.PatchAll(typeof(Plugin).Assembly);Logger.LogInfo("UltraCraft hooks: "+string.Join(", ",patches.GetPatchedMethods().Select(m=>m.DeclaringType?.Name+"."+m.Name)));
       if(!Proto.SelfCheck(Logger)||!Rings.SelfTest(Logger)){enabled=false;return;}
       link=new UltraLink(Logger);if(!link.Create(Proto.MappingName)){enabled=false;return;}
-      render=new RenderRing(link,Config);overlay=new Overlay(link);input=new InputRouter(link,Config);combat=new CrossCombat(link);WeaponMining.Link=link;waves.Prepare=feet=>navmesh.Build(feet,true);
+      render=new RenderRing(link,Config);overlay=new Overlay(link);input=new InputRouter(link,Config);combat=new CrossCombat(link);companion=new Companion();WeaponMining.Link=link;waves.Prepare=feet=>navmesh.Build(feet,true);
       devFile=Path.Combine(Paths.PluginPath,"UltraCraft","dev-command.txt");
       Logger.LogInfo("UltraCraft: Java-only survival bridge started; native ULTRAKILL movement owns the player.");
     }
     void LateUpdate(){
       link.Heartbeat();
       if(link.GuestAlive&&link.ReadGuestState(out var fresh))guest=fresh;
-      if(!requestedScene&&Time.realtimeSinceStartup-started>4&&SceneHelper.PendingScene==null&&SceneHelper.CurrentScene!=null&&SceneHelper.CurrentScene.IndexOf("Main",StringComparison.OrdinalIgnoreCase)>=0){requestedScene=true;Logger.LogInfo("UltraCraft: loading native sandbox");SceneHelper.LoadScene(Design.Launch_Main.HostScene);}
+      if(!requestedScene&&Time.realtimeSinceStartup-started>4&&SceneHelper.PendingScene==null&&SceneHelper.CurrentScene!=null&&IsFirstMenuScene(SceneHelper.CurrentScene)){requestedScene=true;Logger.LogInfo("UltraCraft: loading native sandbox from "+SceneHelper.CurrentScene);SceneHelper.LoadScene(Design.Launch_Main.HostScene);}
       // Singletons: FindObjectOfType scans every object, and the Java world adds thousands.
       var nm=MonoSingleton<NewMovement>.Instance;if(nm!=null&&!nm.isActiveAndEnabled&&!nm.gameObject.activeInHierarchy)nm=null;
       if(nm!=player){player=nm;adopted=false;terminal=null;}
       bool world=link.GuestAlive&&(guest.flags&(uint)Proto.GuestFlags.InWorld)!=0;
+      if(!adopted)companion.Update(link.GuestAlive,world);
       while(link.PopEvent(out var ev)){
         if(!adopted||nm==null)continue;
         if(ev.type==Proto.EvHitActor)combat.HitActor(ev);
@@ -152,7 +154,12 @@ public sealed class Plugin:BaseUnityPlugin {
       else if(cmd.StartsWith("mouse ")){var t=cmd.Split(' ');link.PushInput(Proto.InputType.MouseButton,ushort.Parse(t[1]),int.Parse(t[2]));}
       Logger.LogInfo("UltraCraft dev command: "+cmd);
     }
-    void OnGUI(){if(!adopted){GUI.Box(new Rect(20,20,500,70),"UltraCraft\nPreparing your Minecraft Java world…");return;}
+    /// <summary>
+    /// The first scene ULTRAKILL shows after its intro: the main menu, or the tutorial for players who
+    /// haven't finished it (IntroViolenceScreen sends them there), so new players get UltraCraft too.
+    /// </summary>
+    static bool IsFirstMenuScene(string scene)=>scene.Length>0&&scene!="Intro"&&!scene.StartsWith("Bootstrap",StringComparison.OrdinalIgnoreCase)&&scene!=Design.Launch_Main.HostScene;
+    void OnGUI(){if(!adopted){var waiting=companion!=null?companion.Status:"";GUI.Box(new Rect(20,20,640,string.IsNullOrEmpty(waiting)?70:110),"UltraCraft\nPreparing your Minecraft Java world…"+(string.IsNullOrEmpty(waiting)?"":"\n"+waiting));return;}
       if(input.Building||input.ScreenOpen)overlay.Draw(input.ScreenOpen,input.Cursor);
       GUI.Box(new Rect(12,12,560,76),input.Building?"BUILD MODE  •  V: guns  •  E: inventory  •  /: commands\nH: return to camp":"COMBAT MODE  •  V: mining/building  •  E: inventory\nH: return to camp");
       int alive=waves.Alive;
