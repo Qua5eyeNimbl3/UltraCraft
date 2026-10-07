@@ -111,3 +111,10 @@ Inspect installed version, toolkit knowledge, bridge source and the precise Melt
 - Waves watchdog for off-navmesh, stranded and fallen enemies.
 - Weapon mining: host World/WeaponMining.cs hooks + IN_BREAK_BLOCK (10) / IN_BLAST (11); Java world/WeaponMining.java. New sheet mining.json.
 - Startup log lists applied Harmony hooks. Installed and relaunched through the Desktop launcher.
+
+## Player reports and releases 0.1.1-0.1.4, 2026-10-07
+- New ULTRAKILL players were routed to the Tutorial scene (IntroViolenceScreen), so UltraCraft never started; it now takes over from the first scene after the intro.
+- Placement now waits for loaded terrain (>=200 sections and ground within 48 blocks); Minecraft deaths pause host position authority and re-place at the respawn; a void guard returns the player to the last ground (with a short grace after placement).
+- Companion watchdog starts the bundled Prism when Minecraft is missing, and after losing Minecraft mid-game the player is re-placed when it returns (tested by closing Minecraft gracefully).
+- Big "PLEASE WAIT" screen; firmer ground (CustomGroundProperties friction 2.2; probe showed no seam bumps); PlayerActivator fired on placement so the HUD/weapons always appear; new worlds start at noon via ServerClockManager (26.3 removed /time set noon); hidden Minecraft quits a minute after ULTRAKILL is gone if it never connected (Melty EPERM uninstall/update failures); stale dev commands ignored.
+- Releases 0.1.1-0.1.4 uploaded as drafts; one_click_check yes on each. 0.1.4 awaits the creator's Play in Melty to go live.

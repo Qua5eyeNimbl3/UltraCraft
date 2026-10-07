@@ -174,10 +174,28 @@ public final class SkyClient {
 	private static final long NEVER_CONNECTED_QUIT_MS = 10 * 60 * 1000;
 	private static final long STARTED_AT = System.currentTimeMillis();
 	private static boolean gaveUpWaiting;
+	private static long nextHostCheck, noHostSince;
 
 	private static void quitWithSkyrim(Minecraft minecraft) {
 		int pid = SkyLink.skyrimPid();
 		long now = System.currentTimeMillis();
+		// Hidden and never connected while no ULTRAKILL is running at all (the player quit during loading,
+		// or Minecraft was left over): a minute of that and it closes, so it doesn't sit in the background
+		// holding UltraCraft's files (Melty couldn't update or uninstall them while it ran).
+		if (QUIT_WITH_SKYRIM && START_HIDDEN && pid == 0 && !tookOver && !gaveUpWaiting && now - STARTED_AT > 120_000 && now >= nextHostCheck) {
+			nextHostCheck = now + 5000;
+			boolean hostRunning = ProcessHandle.allProcesses().anyMatch(p -> p.info().command().map(c -> c.toLowerCase(java.util.Locale.ROOT).endsWith("ultrakill.exe")).orElse(false));
+			if (hostRunning) {
+				noHostSince = 0;
+			} else if (noHostSince == 0) {
+				noHostSince = now;
+			} else if (now - noHostSince > 60_000) {
+				gaveUpWaiting = true;
+				SkyCraft.LOG.warn("UltraCraft: ULTRAKILL isn't running and never connected; quitting the hidden Minecraft");
+				minecraft.stop();
+				return;
+			}
+		}
 		if (QUIT_WITH_SKYRIM && START_HIDDEN && pid == 0 && !tookOver && !gaveUpWaiting && now - STARTED_AT > NEVER_CONNECTED_QUIT_MS) {
 			gaveUpWaiting = true;
 			SkyCraft.LOG.warn("SkyCraft: started hidden but Skyrim never connected in {} minutes; quitting", NEVER_CONNECTED_QUIT_MS / 60000);

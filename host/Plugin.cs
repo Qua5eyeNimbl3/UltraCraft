@@ -31,7 +31,9 @@ public sealed class Plugin:BaseUnityPlugin {
     int framesSinceLog;
     NewMovement? player;
     Vector3 spawn,adoptCandidate,lastSafe,prevFeet;
-    float adoptWaitStart=-1,respawnSince=-1;
+    float adoptWaitStart=-1,respawnSince=-1,lostSince=-1;
+    int guardGrace;
+    bool hasCamp;
     float adoptSince;
     ShopZone? terminal;
     GameObject? heldWeapon;
@@ -80,6 +82,10 @@ public sealed class Plugin:BaseUnityPlugin {
       }
       if(world){overlay.Update();render.Update(nm!=null,CurrentFeet(),guest.yaw,true,input.Building&&!input.ScreenOpen,adopted);}
       if(respawnSince>=0&&Time.realtimeSinceStartup-respawnSince>2){respawnSince=-1;adopted=false;adoptWaitStart=-1;} // place the native player at the respawn
+      // Minecraft gone mid-game (closed or crashed): show the wait screen, let the watchdog start it again,
+      // and place the player once it is back, instead of a frozen world with no Minecraft behind it.
+      if(adopted&&!link.GuestAlive){if(lostSince<0)lostSince=Time.realtimeSinceStartup;else if(Time.realtimeSinceStartup-lostSince>6){adopted=false;adoptWaitStart=-1;lostSince=-1;Logger.LogWarning("UltraCraft: lost Minecraft; waiting for it to come back");}}
+      else lostSince=-1;
       if(nm!=null&&world&&!adopted&&SceneHelper.CurrentScene==Design.Launch_Main.HostScene&&SceneHelper.PendingScene==null){
         var target=Coords.ToUnity(guest.x,guest.y,guest.z);
         if(adoptWaitStart<0)adoptWaitStart=Time.realtimeSinceStartup;
@@ -94,16 +100,16 @@ public sealed class Plugin:BaseUnityPlugin {
         if(ground&&(hit.point-adoptCandidate).sqrMagnitude>.01f){adoptCandidate=hit.point;adoptSince=Time.realtimeSinceStartup;}
         if(ground&&loaded&&(near||waited>45)&&Time.realtimeSinceStartup-adoptSince>1.5f){
           if(hit.point.y<target.y-1)target=hit.point;
-          spawn=target;
+          if(!hasCamp){spawn=target;hasCamp=true;} // camp (H) stays where the session started
           float center=nm.transform.position.y-nm.playerCollider.bounds.min.y;
-          nm.rb.position=target+Vector3.up*(center+.1f);nm.rb.velocity=Vector3.zero;adopted=true;lastSafe=prevFeet=target;
+          nm.rb.position=target+Vector3.up*(center+.1f);nm.rb.velocity=Vector3.zero;adopted=true;lastSafe=prevFeet=target;guardGrace=15;
           screens.Adopt(nm);hadScreen=false;lighting.Install();
           Logger.LogInfo($"UltraCraft: native player adopted Java spawn {guest.x:F2} {guest.y:F2} {guest.z:F2}; sections {render.SectionCount}");
           // The sandbox turns on the HUD (health/style panel), weapons and fists when the player falls
           // through its start trigger. Placed in the Java world first, they often never got there.
           int activators=0;foreach(var activator in Object.FindObjectsOfType<PlayerActivator>()){activator.Activate();activators++;}
           if(activators>0)Logger.LogInfo($"UltraCraft: activated the native HUD and weapons ({activators} player activator(s))");
-          PlaceTerminal();SandboxHider.Hide(nm.gameObject.scene,terminal!=null?terminal.transform:null);navmesh.ClearSceneNavmesh();
+          if(terminal==null)PlaceTerminal();SandboxHider.Hide(nm.gameObject.scene,terminal!=null?terminal.transform:null);navmesh.ClearSceneNavmesh();
           RenderSettings.skybox=null;
           if(nm.cc!=null){nm.cc.enabled=true;nm.cc.activated=true;}
           Cursor.lockState=CursorLockMode.Locked;Cursor.visible=false;
@@ -141,6 +147,8 @@ public sealed class Plugin:BaseUnityPlugin {
     /// </summary>
     void GuardAgainstVoid(NewMovement nm){
       var feet=CurrentFeet();
+      // Just placed or teleported: the physics position catches up over the next frames.
+      if(guardGrace>0){guardGrace--;prevFeet=feet;return;}
       bool fell=feet.y<-70*Coords.Scale;
       bool jumped=(feet-prevFeet).magnitude>150;
       if(fell||jumped){
@@ -168,7 +176,7 @@ public sealed class Plugin:BaseUnityPlugin {
       Logger.LogInfo("UltraCraft: moved actual native gun terminal near Java spawn");
     }
     Vector3 Surface(Vector3 position){if(Physics.Raycast(new Vector3(position.x,640,position.z),Vector3.down,out var hit,900,LayerMaskDefaults.Get(LMD.Environment),QueryTriggerInteraction.Ignore))position.y=hit.point.y;return position;}
-    void Travel(NewMovement nm,Vector3 destination){destination=Surface(destination);float center=nm.transform.position.y-nm.playerCollider.bounds.min.y;nm.rb.position=destination+Vector3.up*(center+.15f);lastSafe=prevFeet=destination;nm.rb.velocity=Vector3.zero;}
+    void Travel(NewMovement nm,Vector3 destination){destination=Surface(destination);float center=nm.transform.position.y-nm.playerCollider.bounds.min.y;nm.rb.position=destination+Vector3.up*(center+.15f);lastSafe=prevFeet=destination;guardGrace=15;nm.rb.velocity=Vector3.zero;}
     void SpawnWave(NewMovement nm){
       var feet=CurrentFeet();navmesh.Build(feet,true);
       var facing=nm.cc!=null&&nm.cc.cam!=null?nm.cc.cam.transform.forward:nm.transform.forward;
