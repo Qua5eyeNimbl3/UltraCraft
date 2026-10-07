@@ -99,6 +99,10 @@ public sealed class Plugin:BaseUnityPlugin {
           nm.rb.position=target+Vector3.up*(center+.1f);nm.rb.velocity=Vector3.zero;adopted=true;lastSafe=prevFeet=target;
           screens.Adopt(nm);hadScreen=false;lighting.Install();
           Logger.LogInfo($"UltraCraft: native player adopted Java spawn {guest.x:F2} {guest.y:F2} {guest.z:F2}; sections {render.SectionCount}");
+          // The sandbox turns on the HUD (health/style panel), weapons and fists when the player falls
+          // through its start trigger. Placed in the Java world first, they often never got there.
+          int activators=0;foreach(var activator in Object.FindObjectsOfType<PlayerActivator>()){activator.Activate();activators++;}
+          if(activators>0)Logger.LogInfo($"UltraCraft: activated the native HUD and weapons ({activators} player activator(s))");
           PlaceTerminal();SandboxHider.Hide(nm.gameObject.scene,terminal!=null?terminal.transform:null);navmesh.ClearSceneNavmesh();
           RenderSettings.skybox=null;
           if(nm.cc!=null){nm.cc.enabled=true;nm.cc.activated=true;}
@@ -124,8 +128,8 @@ public sealed class Plugin:BaseUnityPlugin {
         lighting.Update(nm.cc!=null?nm.cc.cam:null,render.Atlas);
         navmesh.Update(CurrentFeet(),waves.Alive+waves.Natural>0);
         combat.Update(CurrentFeet(),nm);
-        DevCommands(nm);
       }
+      if(nm!=null)DevCommands(nm);
       Publish(nm);
       framesSinceLog++;
       if(Time.realtimeSinceStartup-lastLog>10){float fps=framesSinceLog/(Time.realtimeSinceStartup-lastLog);framesSinceLog=0;lastLog=Time.realtimeSinceStartup;Logger.LogInfo($"UltraCraft status: fps={fps:F0}, mobHitboxes={combat?.MobCount}, waveAlive={waves.Alive}, nightEnemies={waves.Natural}, scene={SceneHelper.CurrentScene}, Java={link.GuestAlive}, flags=0x{guest.flags:X}, sections={render.SectionCount}, collisionSections={render.CollisionSectionCount}, waterSections={render.WaterSectionCount}, grounded={nm?.gc?.onGround}, movementActive={nm?.activated}, movementEnabled={nm?.enabled}, kinematic={nm?.rb?.isKinematic}, inputLocked={GameStateManager.Instance?.PlayerInputLocked}, mouseLocked={Cursor.lockState}, cameraActive={nm?.cc?.activated}, adopted={adopted}, position=({guest.x:F2},{guest.y:F2},{guest.z:F2})");}
@@ -182,6 +186,7 @@ public sealed class Plugin:BaseUnityPlugin {
       else if(cmd=="build")input.Building=true;
       else if(cmd=="wave")SpawnWave(nm);
       else if(cmd.StartsWith("preview-time ")){var t=cmd.Split(' ');lighting.Preview(float.Parse(t[1]),t.Length>2?float.Parse(t[2]):5);}
+      else if(cmd=="ground-probe")StartCoroutine(GroundProbe.Run(nm,CurrentFeet()));
       else if(cmd=="test-hits")combat.SelfTest(CurrentFeet());
       else if(cmd=="scene")Logger.LogInfo("UltraCraft scene roots: "+SandboxHider.Describe(nm.gameObject.scene));
       else if(cmd.StartsWith("mouse ")){var t=cmd.Split(' ');link.PushInput(Proto.InputType.MouseButton,ushort.Parse(t[1]),int.Parse(t[2]));}
@@ -192,7 +197,24 @@ public sealed class Plugin:BaseUnityPlugin {
     /// haven't finished it (IntroViolenceScreen sends them there), so new players get UltraCraft too.
     /// </summary>
     static bool IsFirstMenuScene(string scene)=>scene.Length>0&&scene!="Intro"&&!scene.StartsWith("Bootstrap",StringComparison.OrdinalIgnoreCase)&&scene!=Design.Launch_Main.HostScene;
-    void OnGUI(){if(!adopted){var waiting=companion!=null?companion.Status:"";GUI.Box(new Rect(20,20,640,string.IsNullOrEmpty(waiting)?70:110),"UltraCraft\nPreparing your Minecraft Java world…"+(string.IsNullOrEmpty(waiting)?"":"\n"+waiting));return;}
+    GUIStyle? bigText,smallText;
+    /// <summary>Until the player stands in the Java world: a big, unmissable "this is normal, wait" screen.</summary>
+    void DrawWaitScreen(){
+      if(Event.current.type!=EventType.Repaint)return;
+      bigText??=new GUIStyle(GUI.skin.label){alignment=TextAnchor.MiddleCenter,fontStyle=FontStyle.Bold,wordWrap=true,richText=true};
+      smallText??=new GUIStyle(GUI.skin.label){alignment=TextAnchor.UpperCenter,wordWrap=true};
+      bigText.fontSize=Mathf.RoundToInt(Screen.height/16f);smallText.fontSize=Mathf.RoundToInt(Screen.height/42f);
+      var old=GUI.color;GUI.color=new Color(0,0,0,.72f);GUI.DrawTexture(new Rect(0,Screen.height*.28f,Screen.width,Screen.height*.44f),Texture2D.whiteTexture);GUI.color=old;
+      var title=new Rect(Screen.width*.05f,Screen.height*.30f,Screen.width*.9f,Screen.height*.22f);
+      string text="<color=#ff4a3d>PLEASE WAIT</color>\nMinecraft is still loading";
+      // Drop shadow, then the text.
+      GUI.color=Color.black;GUI.Label(new Rect(title.x+3,title.y+3,title.width,title.height),"PLEASE WAIT\nMinecraft is still loading",bigText);GUI.color=old;
+      GUI.Label(title,text,bigText);
+      string waiting=companion!=null?companion.Status:"";
+      GUI.Label(new Rect(Screen.width*.08f,Screen.height*.53f,Screen.width*.84f,Screen.height*.18f),
+        "This is normal - UltraCraft is NOT broken. Minecraft runs hidden in the background, so its window flashes and disappears.\nThe first start downloads Minecraft and can take a few minutes. Be patient: you'll drop into your world by yourself."+(string.IsNullOrEmpty(waiting)?"":"\n\n"+waiting),smallText);
+    }
+    void OnGUI(){if(!adopted){DrawWaitScreen();return;}
       if(input.Building||input.ScreenOpen)overlay.Draw(input.ScreenOpen,input.Cursor);
       GUI.Box(new Rect(12,12,560,76),input.Building?"BUILD MODE  •  V: guns  •  E: inventory  •  /: commands\nH: return to camp":"COMBAT MODE  •  V: mining/building  •  E: inventory\nH: return to camp");
       int alive=waves.Alive;

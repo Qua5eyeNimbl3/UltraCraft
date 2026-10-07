@@ -51,8 +51,12 @@ public final class SkyCraft implements ModInitializer {
 			rules.set(GameRules.SPAWN_PHANTOMS, false, server);
 			rules.set(GameRules.SPAWN_PATROLS, true, server);
 			rules.set(GameRules.SPAWN_WANDERING_TRADERS, true, server);
-			// A new world starts at noon; afterwards day and night carry on across sessions.
-			server.getCommands().performPrefixedCommand(server.createCommandSourceStack().withSuppressedOutput(), "time set noon");
+			// A new world starts at noon; afterwards day and night carry on across sessions. 26.3's /time
+			// works on clocks and time markers (there is no plain "noon" any more), so set the clock itself.
+			var overworld = server.overworld();
+			long now = overworld.getOverworldClockTime();
+			overworld.dimensionType().defaultClock().ifPresent(clock -> server.clockManager().setTotalTicks(clock, now - Math.floorMod(now, 24000L) + 6000L));
+			LOG.info("UltraCraft: new world starts at noon (clock {} -> {})", now, overworld.getOverworldClockTime());
 			server.setDifficulty(net.minecraft.world.Difficulty.valueOf(Design.World_Fresh.Difficulty.toUpperCase(java.util.Locale.ROOT)), true);
 			try {
 				java.nio.file.Files.writeString(marker, "# UltraCraft applied mob spawning and difficulty " + Design.World_Fresh.Difficulty + " once; later changes are kept.\nmobs=1\n");

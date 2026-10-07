@@ -317,5 +317,6 @@ internal static class Design {
     public const int SimulationDistanceChunks = 6;
     public const int KeepRadiusChunks = 10;
     public const string SeedMode = "random";
+    public const double GroundFriction = 2.2;
   }
 }

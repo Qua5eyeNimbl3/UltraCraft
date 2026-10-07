@@ -28,7 +28,11 @@ internal sealed unsafe class TerrainCollision {
       if(root==null){root=new GameObject("UltraCraft terrain collision");UnityEngine.Object.DontDestroyOnLoad(root);}
       var k=(x,y,z,kind);if(sections.TryGetValue(k,out var old))UnityEngine.Object.Destroy(old);
       var go=new GameObject("UltraCraft collision");go.transform.SetParent(root.transform,false);
-      go.transform.position=Coords.ToUnity(x*16,y*16,z*16);go.layer=EnvironmentLayer();go.tag="Floor";sections[k]=go;return go;
+      go.transform.position=Coords.ToUnity(x*16,y*16,z*16);go.layer=EnvironmentLayer();go.tag="Floor";
+      // Firmer footing than ULTRAKILL's arenas: its ground easing left about two-thirds of a block of slide,
+      // which on blocks felt like ice. Only friction changes; jumps, dashes and slides stay native.
+      go.AddComponent<CustomGroundProperties>().friction=(float)Generated.Design.World_Fresh.GroundFriction;
+      sections[k]=go;return go;
     }
     /// <summary>
     /// ULTRAKILL's "Environment" layer (8). The first bit of LMD.Environment is layer 6, which the

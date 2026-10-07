@@ -317,5 +317,6 @@ public final class Design {
     public static final int SimulationDistanceChunks = 6;
     public static final int KeepRadiusChunks = 10;
     public static final String SeedMode = "random";
+    public static final double GroundFriction = 2.2;
   }
 }

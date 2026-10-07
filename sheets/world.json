@@ -13,7 +13,8 @@
     "view_distance_chunks",
     "simulation_distance_chunks",
     "keep_radius_chunks",
-    "seed_mode"
+    "seed_mode",
+    "ground_friction"
   ],
   "rows": [
     {
@@ -30,7 +31,8 @@
       "view_distance_chunks": 8,
       "simulation_distance_chunks": 6,
       "keep_radius_chunks": 10,
-      "seed_mode": "random"
+      "seed_mode": "random",
+      "ground_friction": 2.2
     }
   ],
   "references": {
@@ -51,8 +53,9 @@
       "view_distance_chunks",
       "simulation_distance_chunks",
       "keep_radius_chunks",
-      "seed_mode"
+      "seed_mode",
+      "ground_friction"
     ]
   },
-  "evidence": "User selected a fresh solo Java survival world; local 26.3 installation is present. MirrorWorld.java exposes world generation and settings. Native NewMovement playerCollider is 3.5 host units tall, hence two host units per block. Third play test: user asked for Minecraft mobs, so difficulty is easy with natural mob spawning enabled once per world (marker file ultracraft-world.properties); /difficulty and /gamerule changes the user makes afterwards are kept. View distance 8 chunks; the host drops terrain beyond 10 chunks so memory stays bounded. Fifth play test: dynamic seeds. A newly created world gets a fresh random seed (logged); the existing world keeps its seed. The desktop 'Reset UltraCraft World' tool backs up and removes the save after confirmation, so the next launch generates a new world. seed is kept only as the original world's record."
+  "evidence": "User selected a fresh solo Java survival world; local 26.3 installation is present. MirrorWorld.java exposes world generation and settings. Native NewMovement playerCollider is 3.5 host units tall, hence two host units per block. Third play test: user asked for Minecraft mobs, so difficulty is easy with natural mob spawning enabled once per world (marker file ultracraft-world.properties); /difficulty and /gamerule changes the user makes afterwards are kept. View distance 8 chunks; the host drops terrain beyond 10 chunks so memory stays bounded. Fifth play test: dynamic seeds. A newly created world gets a fresh random seed (logged); the existing world keeps its seed. The desktop 'Reset UltraCraft World' tool backs up and removes the save after confirmation, so the next launch generates a new world. seed is kept only as the original world's record. Seventh play test: 'the ground feels like ice'. A probe with the player's capsule found no seam bumps (1 small kick in 751 steps) and the native ground check reports grounded at rest, so it is ULTRAKILL's own grounded easing (a quarter of the way to the input each physics step: about two-thirds of a block of slide at block scale). Java terrain colliders carry ULTRAKILL's CustomGroundProperties with friction 2.2 (decompiled NewMovement.Move: friction scales that easing); jump, dash, slide and speed stay native."
 }
