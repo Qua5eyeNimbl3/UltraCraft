@@ -231,7 +231,17 @@ public sealed class Plugin:BaseUnityPlugin {
       else if(waves.Night)status=alive>0?$"BLOOD NIGHT • wave {waves.Wave} • {alive} enemies left":$"BLOOD NIGHT • wave {waves.Wave} cleared • next wave in {waves.NextWaveIn:F0}s";
       else{float ticks=Mathf.Repeat(Design.Encounters_Waves.NightStartTicks-javaDayTime,24000);int secs=Mathf.CeilToInt(ticks/20f);status=alive>0?$"Day • {alive} enemies left • night in {secs/60}:{secs%60:00}":$"Day • night falls in {secs/60}:{secs%60:00}";}
       GUI.Label(new Rect(24,62,530,24),status);
+      // Sandbox cheats persist between sessions ("keep cheats enabled"); Blind Enemies or Enemies Ignore
+      // Player leaves every wave standing still, which reads as a broken mod.
+      string? cheat=ULTRAKILL.Cheats.BlindEnemies.Blind?"Blind Enemies":ULTRAKILL.Cheats.EnemyIgnorePlayer.Active?"Enemies Ignore Player":null;
+      if(cheat!=null){
+        if(cheat!=warnedCheat){Logger.LogWarning($"UltraCraft: ULTRAKILL cheat '{cheat}' is on; enemies won't chase the player");warnedCheat=cheat;}
+        var old=GUI.color;GUI.color=new Color(1f,.35f,.3f);
+        GUI.Label(new Rect(24,94,640,24),$"Cheat \"{cheat}\" is ON - enemies won't move. Press ` (or Home) to open cheats and turn it off.");
+        GUI.color=old;
+      }else warnedCheat=null;
     }
+    string? warnedCheat;
     void OnDestroy(){Logger.LogInfo("UltraCraft runtime object destroyed");patches?.UnpatchSelf();Instance=null;screens.Release();lighting.Dispose();if(heldWeapon!=null)heldWeapon.SetActive(true);navmesh.Dispose();combat?.Dispose();link?.Close();}
 }
 [HarmonyPatch(typeof(OptionsManager),nameof(OptionsManager.Pause))]

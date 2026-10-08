@@ -125,3 +125,7 @@ Inspect installed version, toolkit knowledge, bridge source and the precise Melt
 - Real-disk new-player test of 0.1.4 (Melty order: unpack zip, Prism `--launch UltraCraft`, then ULTRAKILL through Steam): Minecraft reached "Backend library" in 77 s, new world started at noon, player placed grounded at spawn with HUD and controls, sandbox hidden. Both games closed cleanly.
 - Players still on the live 0.1.0 get the old void/new-player bugs until 0.1.4 is published from Melty.
 - Plugin and mod version strings now follow the release (were 0.1.0 / 0.1.2). Test switch `ULTRACRAFT_TEST_NEW_PLAYER=1` routes ULTRAKILL to the Tutorial like a new player.
+
+## "Enemies not moving", 2026-10-08
+- Cause: ULTRAKILL's sandbox cheat "Blind Enemies" was on and persisted ("keep cheats enabled"); EnemyIdentifier.UpdateTarget clears every target each frame while it is active. Turned it off in the creator's Prefs.json (backup Prefs.json.before-unblind.bak).
+- Host now shows a red on-screen notice (and logs once) while Blind Enemies or Enemies Ignore Player is active, naming the key to open the cheats menu.
