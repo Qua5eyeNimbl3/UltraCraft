@@ -1,5 +1,5 @@
 {
-  "specificationCells": 239,
+  "specificationCells": 240,
   "errors": [],
   "clean": true,
   "note": "Checks specification completeness. Runtime acceptance tests are reported independently."

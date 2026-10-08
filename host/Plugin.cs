@@ -14,7 +14,7 @@ using UltraCraft.Render;
 using UltraCraft.World;
 using Object=UnityEngine.Object;
 namespace UltraCraft;
-[BepInPlugin("local.ultracraft.bridge","UltraCraft","0.1.0")]
+[BepInPlugin("local.ultracraft.bridge","UltraCraft","0.1.5")]
 [DefaultExecutionOrder(1000)]
 public sealed class Plugin:BaseUnityPlugin {
     internal static Plugin? Instance;
@@ -237,4 +237,12 @@ public sealed class Plugin:BaseUnityPlugin {
 [HarmonyPatch(typeof(OptionsManager),nameof(OptionsManager.Pause))]
 internal static class JavaScreenPauseGuard {
     static bool Prefix()=>Plugin.Instance==null||!Plugin.Instance.JavaScreenOpen;
+}
+/// <summary>
+/// Test switch: with ULTRACRAFT_TEST_NEW_PLAYER=1 in the environment, ULTRAKILL routes this run like a
+/// brand-new player's (to the Tutorial), without touching the real save (Steam Cloud syncs it).
+/// </summary>
+[HarmonyPatch(typeof(IntroViolenceScreen),"GetTargetScene")]
+internal static class NewPlayerRouteTest {
+    static void Postfix(ref string __result){if(Environment.GetEnvironmentVariable("ULTRACRAFT_TEST_NEW_PLAYER")=="1")__result="Tutorial";}
 }

@@ -118,3 +118,10 @@ Inspect installed version, toolkit knowledge, bridge source and the precise Melt
 - Companion watchdog starts the bundled Prism when Minecraft is missing, and after losing Minecraft mid-game the player is re-placed when it returns (tested by closing Minecraft gracefully).
 - Big "PLEASE WAIT" screen; firmer ground (CustomGroundProperties friction 2.2; probe showed no seam bumps); PlayerActivator fired on placement so the HUD/weapons always appear; new worlds start at noon via ServerClockManager (26.3 removed /time set noon); hidden Minecraft quits a minute after ULTRAKILL is gone if it never connected (Melty EPERM uninstall/update failures); stale dev commands ignored.
 - Releases 0.1.1-0.1.4 uploaded as drafts; one_click_check yes on each. 0.1.4 awaits the creator's Play in Melty to go live.
+
+## "Minecraft comes and goes, floating in nothing" investigation, 2026-10-07
+- A fresh-install crash (Fabric/Mixin "cannot be cast ... loader 'knot'/'app'", fabric-events-interaction "Invalid descriptor") turned out to be a test artifact: the Claude desktop app is MSIX-packaged, so Prism started from its shell resolved `%LOCALAPPDATA%` into the app's private redirect store. Not a player bug.
+- The same redirect had hidden the creator's real `%LOCALAPPDATA%\UltraCraft` (moved during the test); restored to the real disk through a WMI-started process.
+- Real-disk new-player test of 0.1.4 (Melty order: unpack zip, Prism `--launch UltraCraft`, then ULTRAKILL through Steam): Minecraft reached "Backend library" in 77 s, new world started at noon, player placed grounded at spawn with HUD and controls, sandbox hidden. Both games closed cleanly.
+- Players still on the live 0.1.0 get the old void/new-player bugs until 0.1.4 is published from Melty.
+- Plugin and mod version strings now follow the release (were 0.1.0 / 0.1.2). Test switch `ULTRACRAFT_TEST_NEW_PLAYER=1` routes ULTRAKILL to the Tutorial like a new player.
