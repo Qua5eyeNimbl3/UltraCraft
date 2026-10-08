@@ -129,3 +129,4 @@ Inspect installed version, toolkit knowledge, bridge source and the precise Melt
 ## "Enemies not moving", 2026-10-08
 - Cause: ULTRAKILL's sandbox cheat "Blind Enemies" was on and persisted ("keep cheats enabled"); EnemyIdentifier.UpdateTarget clears every target each frame while it is active. Turned it off in the creator's Prefs.json (backup Prefs.json.before-unblind.bak).
 - Host now shows a red on-screen notice (and logs once) while Blind Enemies or Enemies Ignore Player is active, naming the key to open the cheats menu.
+- Release 0.1.5 (cheat warning, version strings) uploaded and submitted to Melty as a draft (release e0460ae2); one_click_check yes, publishable. Goes live when the creator presses Play on it in Melty.
