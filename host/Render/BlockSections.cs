@@ -8,8 +8,9 @@ namespace UltraCraft.Render;
 
 /// <summary>
 /// Minecraft's placed blocks as Unity meshes. Java sends one 16-block section at a time; sections are
-/// kept as data and drawn as one mesh per chunk column (up to ~24 sections), so the renderer count and
-/// draw calls (times every shadow cascade) stay low as more of the world loads.
+/// kept as data and drawn as one mesh per stack of four sections in a chunk column, so the renderer
+/// count and draw calls (times every shadow cascade) stay low as more of the world loads, while a dug
+/// block or an explosion rebuilds 64 blocks of height instead of the whole column.
 /// </summary>
 internal sealed unsafe class BlockSections
 {
@@ -35,8 +36,11 @@ internal sealed unsafe class BlockSections
     private const float RebuildBudgetMs = 4f;
 
     private readonly Atlas atlas;
-    private readonly Dictionary<(int, int), Column> columns = new();
-    private readonly LinkedList<(int, int)> dirty = new();
+    private readonly Dictionary<(int x, int g, int z), Column> columns = new();
+    private readonly LinkedList<(int, int, int)> dirty = new();
+    // Java re-sends a section when its light or a neighbour changes, often with identical geometry.
+    private readonly Dictionary<(int, int, int), ulong> hashes = new();
+    private readonly List<(int, int, int)> far = new();
     private readonly List<Vector3> positions = new();
     private readonly List<Vector3> normals = new();
     private readonly List<Vector2> uvs = new();
@@ -73,6 +77,7 @@ internal sealed unsafe class BlockSections
         }
         columns.Clear();
         dirty.Clear();
+        hashes.Clear();
         count = 0;
     }
 
@@ -91,10 +96,10 @@ internal sealed unsafe class BlockSections
     /// <summary>Drops columns more than <paramref name="radius"/> chunks away; Java re-sends them when they load again.</summary>
     public void Evict(int cx, int cz, int radius)
     {
-        var far = new List<(int, int)>();
+        far.Clear();
         foreach (var pair in columns)
         {
-            if (System.Math.Abs(pair.Key.Item1 - cx) > radius || System.Math.Abs(pair.Key.Item2 - cz) > radius)
+            if (System.Math.Abs(pair.Key.x - cx) > radius || System.Math.Abs(pair.Key.z - cz) > radius)
             {
                 far.Add(pair.Key);
             }
@@ -105,13 +110,32 @@ internal sealed unsafe class BlockSections
             Destroy(columns[key]);
             columns.Remove(key);
         }
+        far.Clear();
+        foreach (var key in hashes.Keys)
+        {
+            if (System.Math.Abs(key.Item1 - cx) > radius || System.Math.Abs(key.Item3 - cz) > radius)
+            {
+                far.Add(key);
+            }
+        }
+        foreach (var key in far)
+        {
+            hashes.Remove(key);
+        }
     }
 
     /// <summary>kRenSection: a section's whole mesh as a triangle list; no vertices removes it.</summary>
     public void SetSection(in Proto.RenSectionHdr header, Proto.RenVertex* vertices)
     {
-        var key = (header.sx, header.sz);
-        if (!columns.TryGetValue(key, out Column? column))
+        var key = (header.sx, header.sy >> 2, header.sz);
+        var sectionKey = (header.sx, header.sy, header.sz);
+        ulong hash = Hash(vertices, header.vertexCount);
+        if (columns.TryGetValue(key, out Column? column) && column.Sections.ContainsKey(header.sy)
+            && hashes.TryGetValue(sectionKey, out ulong known) && known == hash)
+        {
+            return; // same geometry and light as what is already drawn
+        }
+        if (column == null)
         {
             column = new Column();
             columns[key] = column;
@@ -120,10 +144,12 @@ internal sealed unsafe class BlockSections
         {
             count--;
         }
+        hashes.Remove(sectionKey);
         Section? section = Build(header, vertices);
         if (section != null)
         {
             column.Sections[header.sy] = section;
+            hashes[sectionKey] = hash;
             count++;
         }
         if (!column.Queued)
@@ -131,6 +157,25 @@ internal sealed unsafe class BlockSections
             column.Queued = true;
             dirty.AddLast(key);
         }
+    }
+
+    private static ulong Hash(Proto.RenVertex* vertices, uint vertexCount)
+    {
+        long bytes = (long)vertexCount * sizeof(Proto.RenVertex);
+        ulong h = 14695981039346656037UL ^ vertexCount;
+        var words = (ulong*)vertices;
+        long n = bytes / 8;
+        for (long i = 0; i < n; i++)
+        {
+            h = (h ^ words[i]) * 1099511628211UL;
+            h ^= h >> 29;
+        }
+        var tail = (byte*)vertices + n * 8;
+        for (long i = 0; i < bytes - n * 8; i++)
+        {
+            h = (h ^ tail[i]) * 1099511628211UL;
+        }
+        return h;
     }
 
     private Section? Build(in Proto.RenSectionHdr header, Proto.RenVertex* vertices)
@@ -209,7 +254,7 @@ internal sealed unsafe class BlockSections
         }
     }
 
-    private void Rebuild((int x, int z) key, Column column)
+    private void Rebuild((int x, int g, int z) key, Column column)
     {
         if (column.Sections.Count == 0)
         {
@@ -278,7 +323,7 @@ internal sealed unsafe class BlockSections
                 root = new GameObject("UltraCraft blocks") { hideFlags = HideFlags.DontSave };
                 Object.DontDestroyOnLoad(root);
             }
-            column.Object = new GameObject($"chunk {key.x} {key.z}");
+            column.Object = new GameObject($"chunk {key.x} {key.z} part {key.g}");
             column.Object.transform.SetParent(root.transform, worldPositionStays: false);
             column.Object.transform.position = Coords.ToUnity(key.x * 16.0, 0, key.z * 16.0);
             column.Object.AddComponent<MeshFilter>().sharedMesh = mesh;

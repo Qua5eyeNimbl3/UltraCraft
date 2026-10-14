@@ -5,7 +5,7 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblyName>UltraCraft</AssemblyName>
-    <Version>0.1.6</Version>
+    <Version>0.1.7</Version>
     <GameDir Condition="'$(GameDir)'==''">C:/Program Files (x86)/Steam/steamapps/common/ULTRAKILL</GameDir>
     <BepDir Condition="'$(BepDir)'==''">$(GameDir)/BepInEx/core</BepDir>
   </PropertyGroup>

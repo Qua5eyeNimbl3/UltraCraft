@@ -15,7 +15,7 @@ namespace UltraCraft.World;
 /// hittable stand-ins (SkyCombat) and reports Minecraft melee/arrow hits back as EvHitActor.</para>
 /// </summary>
 internal sealed class CrossCombat {
-    sealed class Mob {public GameObject Root=null!;public BoxCollider Body=null!,Head=null!;public EnemyIdentifier Eid=null!;public int Seen;}
+    sealed class Mob {public GameObject Root=null!;public BoxCollider Body=null!,Head=null!;public EnemyIdentifier Eid=null!;public int Seen;public Vector3 At=new(float.NaN,0,0);public Vector4 Shape;}
     static readonly Dictionary<EnemyIdentifier,int> proxyIds=new();
     static readonly Dictionary<int,(float damage,Vector3 force)> pendingHits=new();
     readonly UltraLink link;
@@ -48,10 +48,17 @@ internal sealed class CrossCombat {
         if(!mobs.TryGetValue((int)e.id,out var mob)){mob=Create((int)e.id);mobs[(int)e.id]=mob;}
         mob.Seen=frame;
         float width=Mathf.Max(e.scale,.3f)*Coords.Scale,height=e.ext0*Coords.Scale,eye=(e.ext2>0?e.ext2:e.ext0*.85f)*Coords.Scale;
-        mob.Root.transform.position=Coords.ToUnity(e.x,e.y,e.z);
-        mob.Body.center=new Vector3(0,height*.5f,0);mob.Body.size=new Vector3(width,height,width);
+        // Each collider write rebuilds its PhysX shape, and a kinematic move re-syncs the body:
+        // with dozens of mobs in range that was hundreds of rebuilds a frame for unchanged values.
+        var at=Coords.ToUnity(e.x,e.y,e.z);
+        if(at!=mob.At){mob.At=at;mob.Root.transform.position=at;}
         float head=Mathf.Min(width,.6f*Coords.Scale);
-        mob.Head.center=new Vector3(0,eye,0);mob.Head.size=Vector3.one*head;
+        var shape=new Vector4(width,height,eye,head);
+        if(shape!=mob.Shape){
+          mob.Shape=shape;
+          mob.Body.center=new Vector3(0,height*.5f,0);mob.Body.size=new Vector3(width,height,width);
+          mob.Head.center=new Vector3(0,eye,0);mob.Head.size=Vector3.one*head;
+        }
       }
       gone.Clear();foreach(var pair in mobs)if(pair.Value.Seen!=frame)gone.Add(pair.Key);
       foreach(var id in gone){proxyIds.Remove(mobs[id].Eid);Object.Destroy(mobs[id].Root);mobs.Remove(id);}

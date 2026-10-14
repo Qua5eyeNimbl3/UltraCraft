@@ -7,6 +7,7 @@ internal sealed unsafe class TerrainCollision {
     readonly Dictionary<(int,int,int,int),GameObject> sections=new();
     readonly List<(int,int,int,int)> evicted=new();
     readonly Dictionary<(int,int,int,int),ulong> hashes=new();
+    readonly bool[] solidCells=new bool[4096]; // reused: every cell is rewritten per section
     GameObject? root;
     public int Count=>sections.Count;
     public void Clear(){foreach(var p in sections.Values)UnityEngine.Object.Destroy(p);sections.Clear();hashes.Clear();}
@@ -42,7 +43,7 @@ internal sealed unsafe class TerrainCollision {
     public static int EnvironmentLayer(){int named=LayerMask.NameToLayer("Environment");return named>=0?named:8;}
     static void Box(GameObject go,float x0,float y0,float z0,float x1,float y1,float z1){var c=go.AddComponent<BoxCollider>();c.center=new Vector3((x0+x1)*.5f,(y0+y1)*.5f,-(z0+z1)*.5f)*Coords.Scale;c.size=new Vector3(x1-x0,y1-y0,z1-z0)*Coords.Scale;}
     public void Partials(byte* p,uint bytes){if(bytes<16)return;int* h=(int*)p;int count=h[3];if(count<0||16L+24L*count>bytes)return;if(Unchanged(h[0],h[1],h[2],1,p,bytes))return;var go=Begin(h[0],h[1],h[2],1);float* b=(float*)(p+16);for(int i=0;i<count;i++,b+=6)Box(go,b[0],b[1],b[2],b[3],b[4],b[5]);}
-    public void Solids(byte* p,uint bytes){if(bytes<16)return;int* h=(int*)p;if(Unchanged(h[0],h[1],h[2],0,p,bytes))return;var go=Begin(h[0],h[1],h[2],0);if(h[3]==0)return;if(bytes<528)return;ulong* bits=(ulong*)(p+16);var used=new bool[4096];for(int i=0;i<4096;i++)used[i]=(bits[i>>6]&(1UL<<(i&63)))!=0;
+    public void Solids(byte* p,uint bytes){if(bytes<16)return;int* h=(int*)p;if(Unchanged(h[0],h[1],h[2],0,p,bytes))return;var go=Begin(h[0],h[1],h[2],0);if(h[3]==0)return;if(bytes<528)return;ulong* bits=(ulong*)(p+16);var used=solidCells;for(int i=0;i<4096;i++)used[i]=(bits[i>>6]&(1UL<<(i&63)))!=0;
       for(int y=0;y<16;y++)for(int z=0;z<16;z++)for(int x=0;x<16;x++){
         if(!used[x+16*z+256*y])continue;int xe=x+1;while(xe<16&&used[xe+16*z+256*y])xe++;
         int ze=z+1;while(ze<16&&Row(used,x,xe,ze,y))ze++;

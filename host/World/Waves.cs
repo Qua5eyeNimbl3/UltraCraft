@@ -22,7 +22,7 @@ internal sealed class Waves {
     public bool Running=>running;
     public bool Night {get;private set;}
     public Func<Vector3,bool>? Prepare;
-    bool waitingForNavigation;
+    bool waitingForNavigation;float lastNavigationTry;
     public int Alive{get{alive.RemoveAll(e=>e==null||e.dead);return alive.Count;}}
     public int Natural{get{natural.RemoveAll(e=>e==null||e.dead);return natural.Count;}}
     public float NextWaveIn=>running&&clearedAt>=0?Mathf.Max(0,(float)Design.Encounters_Waves.AutoNextDelaySeconds-(Time.time-clearedAt)):-1;
@@ -75,8 +75,10 @@ internal sealed class Waves {
       bool night=dayTime>=Design.Encounters_Waves.NightStartTicks&&dayTime<Design.Encounters_Waves.NightEndTicks;
       if(night&&!Night){Night=true;Wave=0;Plugin.Log.LogInfo("UltraCraft: night falls, waves begin");Spawn(feet,facing);}
       else if(!night&&Night){Night=false;running=false;waitingForNavigation=false;clearedAt=-1;Plugin.Log.LogInfo($"UltraCraft: dawn after wave {Wave}");}
-      if(waitingForNavigation&&running)Spawn(feet,facing);
-      if(running&&Wave>0&&Alive==0){
+      // Waiting for the navmesh: retry twice a second, not every frame (each try re-checked the build
+      // and logged the previous wave as cleared again).
+      if(waitingForNavigation&&running&&Time.time-lastNavigationTry>=.5f){lastNavigationTry=Time.time;Spawn(feet,facing);}
+      if(running&&Wave>0&&Alive==0&&!waitingForNavigation){
         if(clearedAt<0){clearedAt=Time.time;Plugin.Log.LogInfo($"UltraCraft: wave {Wave} cleared");}
         else if(Time.time-clearedAt>=Design.Encounters_Waves.AutoNextDelaySeconds)Spawn(feet,facing);
       }

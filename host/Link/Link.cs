@@ -38,6 +38,12 @@ internal sealed unsafe class UltraLink
     [DllImport("kernel32")]
     private static extern uint GetCurrentProcessId();
 
+    [DllImport("kernel32", CharSet = CharSet.Unicode, ExactSpelling = true)]
+    private static extern IntPtr CreateEventW(IntPtr attributes, bool manualReset, bool initialState, string name);
+
+    [DllImport("kernel32")]
+    private static extern bool SetEvent(IntPtr handle);
+
     private const uint PageReadWrite = 0x04;
     private const uint FileMapAllAccess = 0xF001F;
     private const int ErrorAlreadyExists = 183;
@@ -55,6 +61,9 @@ internal sealed unsafe class UltraLink
         QueryPerformanceFrequency(out long frequency);
         QpcFrequency = frequency;
     }
+
+    // Set after every host state write: Minecraft sleeps on it between frames instead of spinning a core.
+    private IntPtr frameEvent;
 
     public bool Created => @base != null;
     public long QpcFrequency { get; }
@@ -109,6 +118,10 @@ internal sealed unsafe class UltraLink
         Header->hostPid = GetCurrentProcessId();
         Header->hostHeartbeatMs = GetTickCount64();
         Volatile.Write(ref Header->magic, Proto.Magic);
+        if (frameEvent == IntPtr.Zero)
+        {
+            frameEvent = CreateEventW(IntPtr.Zero, false, false, name + "_frame");
+        }
 
         log.LogInfo($"shared memory {name} ({size >> 20} MB, {(created == ErrorAlreadyExists ? "reused" : "created")})");
         return true;
@@ -126,6 +139,11 @@ internal sealed unsafe class UltraLink
         {
             CloseHandle(mapping);
             mapping = IntPtr.Zero;
+        }
+        if (frameEvent != IntPtr.Zero)
+        {
+            CloseHandle(frameEvent);
+            frameEvent = IntPtr.Zero;
         }
     }
 
@@ -149,6 +167,10 @@ internal sealed unsafe class UltraLink
     {
         hostState = state;
         Rings.SeqlockWrite(@base + Proto.OffHostState, state);
+        if (frameEvent != IntPtr.Zero)
+        {
+            SetEvent(frameEvent);
+        }
     }
 
     public bool ReadGuestState(out Proto.GuestState state) => Rings.SeqlockRead(@base + Proto.OffGuestState, out state);

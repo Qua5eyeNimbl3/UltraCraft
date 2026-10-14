@@ -37,6 +37,11 @@ public final class SkyLink {
 	private static final MethodHandle QUERY_PERFORMANCE_COUNTER;
 	private static final MethodHandle QUERY_PERFORMANCE_FREQUENCY;
 	private static final MethodHandle CREATE_MUTEX;
+	private static final MethodHandle OPEN_EVENT;
+	private static final MethodHandle WAIT_FOR_SINGLE_OBJECT;
+	private static final int SYNCHRONIZE = 0x00100000;
+	private static MemorySegment frameEvent;
+	private static long lastEventAttempt;
 	private static MemorySegment runningMutex;
 	private static final MemorySegment QPC_OUT = Arena.global().allocate(JAVA_LONG);
 
@@ -54,6 +59,8 @@ public final class SkyLink {
 		QUERY_PERFORMANCE_COUNTER = linker.downcallHandle(k32.find("QueryPerformanceCounter").orElseThrow(), FunctionDescriptor.of(JAVA_INT, ADDRESS));
 		QUERY_PERFORMANCE_FREQUENCY = linker.downcallHandle(k32.find("QueryPerformanceFrequency").orElseThrow(), FunctionDescriptor.of(JAVA_INT, ADDRESS));
 		CREATE_MUTEX = linker.downcallHandle(k32.find("CreateMutexW").orElseThrow(), FunctionDescriptor.of(ADDRESS, ADDRESS, JAVA_INT, ADDRESS));
+		OPEN_EVENT = linker.downcallHandle(k32.find("OpenEventW").orElseThrow(), FunctionDescriptor.of(ADDRESS, JAVA_INT, JAVA_INT, ADDRESS));
+		WAIT_FOR_SINGLE_OBJECT = linker.downcallHandle(k32.find("WaitForSingleObject").orElseThrow(), FunctionDescriptor.of(JAVA_INT, ADDRESS, JAVA_INT));
 	}
 
 	/**
@@ -291,6 +298,38 @@ public final class SkyLink {
 			}
 		}
 		return false;
+	}
+
+	/**
+	 * Sleeps until the host signals its next frame ("<link name>_frame", set after every host state
+	 * write) or the timeout passes. Returns false when the host has no such event (an older host),
+	 * so the caller falls back to polling. Waiting here instead of spinning frees a whole CPU core
+	 * for the host game.
+	 */
+	public static boolean waitHostFrame(int timeoutMs) {
+		if (frameEvent == null) {
+			long now = System.currentTimeMillis();
+			if (now - lastEventAttempt < 1000) {
+				return false;
+			}
+			lastEventAttempt = now;
+			try (Arena arena = Arena.ofConfined()) {
+				MemorySegment handle = (MemorySegment) OPEN_EVENT.invokeExact(SYNCHRONIZE, 0, WideString.allocate(arena, MAPPING_NAME + "_frame"));
+				if (handle.address() == 0) {
+					return false;
+				}
+				frameEvent = handle;
+				SkyCraft.LOG.info("SkyCraft: pacing on the host's frame signal");
+			} catch (Throwable t) {
+				return false;
+			}
+		}
+		try {
+			int ignored = (int) WAIT_FOR_SINGLE_OBJECT.invokeExact(frameEvent, Math.max(1, timeoutMs));
+			return true;
+		} catch (Throwable t) {
+			return false;
+		}
 	}
 
 	/** Raw SkyState sequence number; changes once per Skyrim frame. */

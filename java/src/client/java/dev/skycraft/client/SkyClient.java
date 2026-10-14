@@ -462,10 +462,17 @@ public final class SkyClient {
 		skyrimStalled = false;
 		long deadline = System.nanoTime() + 25_000_000L;
 		// SkyState.seq advances by 2 per Skyrim frame (odd while writing).
-		while ((SkyLink.skyStateSeq() >>> 1) == lastPacedSeq && System.nanoTime() < deadline) {
-			Thread.onSpinWait();
-			if (deadline - System.nanoTime() > 2_000_000L) {
-				Thread.yield();
+		while ((SkyLink.skyStateSeq() >>> 1) == lastPacedSeq) {
+			long left = deadline - System.nanoTime();
+			if (left <= 0) {
+				break;
+			}
+			// Sleep on the host's frame signal; spin only for a host without one.
+			if (!SkyLink.waitHostFrame((int) Math.max(1, left / 1_000_000L))) {
+				Thread.onSpinWait();
+				if (left > 2_000_000L) {
+					Thread.yield();
+				}
 			}
 		}
 		int seqNow = SkyLink.skyStateSeq() >>> 1;

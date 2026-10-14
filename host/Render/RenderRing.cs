@@ -37,6 +37,11 @@ internal sealed unsafe class RenderRing
     private float lastLog;
     private float lastEvict;
     private int messages;
+    // Minecraft sends the avatar and the scene of entities and particles every frame; when several
+    // arrive in one drain (after a hitch) only the newest is built into a mesh.
+    private byte[] sceneBytes = new byte[0], avatarBytes = new byte[0];
+    private uint sceneLength, avatarLength;
+    private bool scenePending, avatarPending;
 
     public RenderRing(UltraLink link, ConfigFile config)
     {
@@ -55,6 +60,16 @@ internal sealed unsafe class RenderRing
     {
         atlas.ResolveShaders();
         link.DrainRender(BytesPerFrame, handler);
+        if (scenePending)
+        {
+            scenePending = false;
+            fixed (byte* p = sceneBytes) ApplyScene(p, sceneLength);
+        }
+        if (avatarPending && !firstPerson)
+        {
+            avatarPending = false;
+            fixed (byte* p = avatarBytes) ApplyModel(avatar, p, avatarLength);
+        }
         sections.Update();
         water.Update(feet);
         if (anchored && Time.unscaledTime - lastEvict > 2f)
@@ -114,6 +129,7 @@ internal sealed unsafe class RenderRing
         switch (type)
         {
             case Proto.RenClearAll:
+                scenePending = avatarPending = false;
                 sections.Clear();
         collision.Clear();
                 water.Clear();
@@ -157,32 +173,17 @@ internal sealed unsafe class RenderRing
                 break;
             }
             case Proto.RenAvatar when bytes >= sizeof(Proto.RenAvatarHdr):
-            case Proto.RenRagdoll when bytes >= sizeof(Proto.RenAvatarHdr):
-            {
-                var header = (Proto.RenAvatarHdr*)payload;
-                ulong need = (ulong)sizeof(Proto.RenAvatarHdr) + (ulong)header->batchCount * (ulong)sizeof(Proto.RenBatch) + (ulong)header->vertexCount * (ulong)sizeof(Proto.RenVertex);
-                if (bytes >= need)
-                {
-                    var batches = (Proto.RenBatch*)(payload + sizeof(Proto.RenAvatarHdr));
-                    if (!PayloadChecks.Model(header->batchCount, header->vertexCount, batches)) break;
-                    (type == Proto.RenAvatar ? avatar : body).Set(header->batchCount, header->vertexCount, batches, (Proto.RenVertex*)(batches + header->batchCount));
-                }
+                Stash(ref avatarBytes, payload, bytes);
+                avatarLength = bytes;
+                avatarPending = true;
                 break;
-            }
+            case Proto.RenRagdoll:
+                break; // the standing body is for mirror cameras, which ULTRAKILL doesn't have
             case Proto.RenScene when bytes >= sizeof(Proto.RenSceneHdr):
-            {
-                // Every other entity (TNT, boats, chests, ...) and all particles, relative to a block near the camera.
-                var header = (Proto.RenSceneHdr*)payload;
-                ulong need = (ulong)sizeof(Proto.RenSceneHdr) + (ulong)header->batchCount * (ulong)sizeof(Proto.RenBatch) + (ulong)header->vertexCount * (ulong)sizeof(Proto.RenVertex);
-                if (bytes >= need)
-                {
-                    var batches = (Proto.RenBatch*)(payload + sizeof(Proto.RenSceneHdr));
-                    if (!PayloadChecks.Model(header->batchCount, header->vertexCount, batches)) break;
-                    sceneOrigin = Coords.ToUnity(header->originX, header->originY, header->originZ);
-                    scene.Set(header->batchCount, header->vertexCount, batches, (Proto.RenVertex*)(batches + header->batchCount));
-                }
+                Stash(ref sceneBytes, payload, bytes);
+                sceneLength = bytes;
+                scenePending = true;
                 break;
-            }
             case 8:  // lights
                 break;
             case 10: // solids
@@ -204,6 +205,37 @@ internal sealed unsafe class RenderRing
                 }
                 break;
         }
+    }
+
+    private static void Stash(ref byte[] buffer, byte* payload, uint bytes)
+    {
+        if (buffer.Length < bytes)
+        {
+            buffer = new byte[System.Math.Max(bytes, (uint)buffer.Length * 2)];
+        }
+        fixed (byte* p = buffer) System.Buffer.MemoryCopy(payload, p, buffer.Length, bytes);
+    }
+
+    private void ApplyModel(CapturedModel model, byte* payload, uint bytes)
+    {
+        var header = (Proto.RenAvatarHdr*)payload;
+        ulong need = (ulong)sizeof(Proto.RenAvatarHdr) + (ulong)header->batchCount * (ulong)sizeof(Proto.RenBatch) + (ulong)header->vertexCount * (ulong)sizeof(Proto.RenVertex);
+        if (bytes < need) return;
+        var batches = (Proto.RenBatch*)(payload + sizeof(Proto.RenAvatarHdr));
+        if (!PayloadChecks.Model(header->batchCount, header->vertexCount, batches)) return;
+        model.Set(header->batchCount, header->vertexCount, batches, (Proto.RenVertex*)(batches + header->batchCount));
+    }
+
+    /// <summary>Every other entity (TNT, boats, chests, ...) and all particles, relative to a block near the camera.</summary>
+    private void ApplyScene(byte* payload, uint bytes)
+    {
+        var header = (Proto.RenSceneHdr*)payload;
+        ulong need = (ulong)sizeof(Proto.RenSceneHdr) + (ulong)header->batchCount * (ulong)sizeof(Proto.RenBatch) + (ulong)header->vertexCount * (ulong)sizeof(Proto.RenVertex);
+        if (bytes < need) return;
+        var batches = (Proto.RenBatch*)(payload + sizeof(Proto.RenSceneHdr));
+        if (!PayloadChecks.Model(header->batchCount, header->vertexCount, batches)) return;
+        sceneOrigin = Coords.ToUnity(header->originX, header->originY, header->originZ);
+        scene.Set(header->batchCount, header->vertexCount, batches, (Proto.RenVertex*)(batches + header->batchCount));
     }
 
     /// <summary>The outline around the block Minecraft's crosshair is on, from the world-entities table.</summary>

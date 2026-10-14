@@ -1,8 +1,10 @@
 UltraCraft - ULTRAKILL x Minecraft: Java Edition (single player)
 
-Press Play in Melty. The first time, Prism Launcher opens once: sign in with the Microsoft
-account that owns Minecraft: Java Edition. Java is bundled; Prism downloads Minecraft, then ULTRAKILL
-starts and puts you into your Minecraft world. Closing ULTRAKILL saves and closes Minecraft.
+Press Play in Melty. If Prism Launcher opens and asks you to sign in, sign in with the Microsoft
+account that owns Minecraft: Java Edition and leave the window open: closing it stops the setup
+("Minecraft was closed before it finished setting up"). Java is bundled; Prism downloads Minecraft
+(a few minutes the first time), then ULTRAKILL starts and puts you into your Minecraft world.
+Closing ULTRAKILL saves and closes Minecraft.
 
 Controls: ULTRAKILL movement and guns as usual. V switches between guns and Minecraft
 mining/building (hold left to mine, right to place). E inventory, T or / chat and commands,

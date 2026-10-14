@@ -11,7 +11,7 @@
     }
   ],
   "notes": {
-    "firstLaunch": "The first Play opens Prism Launcher: sign in with the Microsoft account that owns Minecraft: Java Edition. Prism downloads Minecraft (a few minutes); Java is bundled. Later Plays start the companion automatically. ULTRAKILL is the visible game and Minecraft runs hidden behind it."
+    "firstLaunch": "If Prism Launcher opens on the first Play, sign in with the Microsoft account that owns Minecraft: Java Edition and keep that window open until Minecraft has downloaded (a few minutes); closing it stops the setup. Java is bundled. ULTRAKILL is the visible game and Minecraft runs hidden behind it."
   },
   "setup": {
     "done": {
@@ -51,14 +51,14 @@
       "id": "main",
       "kind": "main",
       "label": "UltraCraft",
-      "fileName": "UltraCraft-0.1.6.zip",
+      "fileName": "UltraCraft-0.1.7.zip",
       "required": true
     },
     {
       "id": "minecraft",
       "kind": "extra",
       "label": "UltraCraft's Minecraft",
-      "fileName": "UltraCraft-Minecraft-0.1.6.zip",
+      "fileName": "UltraCraft-Minecraft-0.1.7.zip",
       "required": true
     }
   ],

@@ -105,13 +105,22 @@ internal sealed unsafe class Atlas
             }
             Plugin.Log.LogInfo(id == 0 ? $"blocks: atlas {width}x{height}" : $"blocks: texture {id} {width}x{height}");
         }
-        var alpha = new byte[width * height];
-        for (int i = 0; i < alpha.Length; i++)
+        // The lightmap arrives five times a second and is never classified; other textures only
+        // invalidate the triangle cache when their transparency really changed. Clearing it on every
+        // lightmap update made every section and every entity frame re-sample its texels.
+        if (id != Generated.Design.Render_Native.LightmapTextureId)
         {
-            alpha[i] = pixels[i * 4 + 3];
+            var alpha = new byte[width * height];
+            for (int i = 0; i < alpha.Length; i++)
+            {
+                alpha[i] = pixels[i * 4 + 3];
+            }
+            if (!alphas.TryGetValue(id, out var known) || known.width != width || known.height != height || !SameBytes(known.alpha, alpha))
+            {
+                alphas[id] = (width, height, alpha);
+                classified.Clear();
+            }
         }
-        alphas[id] = (width, height, alpha);
-        classified.Clear();
         // Loaded as sent: Unity's row 0 is then Minecraft's top row, so Minecraft's v is used unchanged.
         if (texture.mipmapCount > 1)
         {
@@ -131,6 +140,12 @@ internal sealed unsafe class Atlas
         }
     }
 
+    static bool SameBytes(byte[] a, byte[] b)
+    {
+        if (a.Length != b.Length) return false;
+        for (int i = 0; i < a.Length; i++) if (a[i] != b[i]) return false;
+        return true;
+    }
     static int AtlasMips(int width, int height)
     {
         int levels = 1;

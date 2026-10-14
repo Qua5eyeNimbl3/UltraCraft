@@ -55,7 +55,9 @@ function Add-Folder([System.Collections.IDictionary]$entries, [string]$folder, [
 
 $dll = "$root\host\bin\Release\netstandard2.1\UltraCraft.dll"
 $shader = "$root\shaders\built\ultracraft-shaders"
-$jar = Get-ChildItem "$root\java\build\libs" -Filter *.jar | Where-Object { $_.Name -notlike '*sources*' } | Select-Object -First 1
+# Only the jar built for this version: an older build left in libs must never be packaged.
+$jar = Get-ChildItem "$root\java\build\libs" -Filter "*-$Version.jar" | Where-Object { $_.Name -notlike '*sources*' } | Select-Object -First 1
+if ($null -eq $jar) { throw "no companion jar for $Version in java\build\libs (build the Java half first)" }
 foreach ($f in @($dll, $shader, $jar.FullName)) { if (-not (Test-Path $f)) { throw "missing $f (build both halves first)" } }
 
 $cache = "$root\.tools\melty"

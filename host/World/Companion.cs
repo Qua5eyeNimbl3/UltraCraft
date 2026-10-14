@@ -30,7 +30,7 @@ internal sealed class Companion {
       crash??=RecentCrash();
       bool signedIn=!bundled||File.Exists(Path.Combine(prismDir,"accounts.json"));
       if(crash!=null)Status="Minecraft stopped with an error: "+crash+"\nUltraCraft is starting it again. Details: "+Path.Combine(GameDir,"crash-reports");
-      else if(!signedIn)Status="Sign in to Minecraft in the Prism Launcher window\n(the Microsoft account that owns Minecraft: Java Edition).";
+      else if(!signedIn)Status="Sign in to Minecraft in the Prism Launcher window\n(the Microsoft account that owns Minecraft: Java Edition) and keep that window open.\nIt may be behind ULTRAKILL: press Alt+Tab to find it.";
       else if(!bundled)Status="Minecraft's launcher is missing. Return to Melty and reinstall UltraCraft to repair it.";
       else if(starts>=3)Status="Minecraft could not start after three attempts. Check the Prism Launcher window for a sign-in or error, then press Play again in Melty.";
       else Status=$"Starting Minecraft in the background... {now-lastAlive:F0}s\n(its window stays hidden on purpose; the first start downloads Minecraft and takes a few minutes)";
