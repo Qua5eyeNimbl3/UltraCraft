@@ -123,7 +123,7 @@ internal sealed unsafe class RenderRing
             case Proto.RenAtlas when bytes >= sizeof(Proto.RenAtlasHdr):
             {
                 var header = (Proto.RenAtlasHdr*)payload;
-                if (bytes >= (ulong)sizeof(Proto.RenAtlasHdr) + (ulong)header->width * header->height * 4)
+                if (PayloadChecks.Texture(header->width, header->height, bytes, (uint)sizeof(Proto.RenAtlasHdr)))
                 {
                     atlas.SetTexture(0, (int)header->width, (int)header->height, payload + sizeof(Proto.RenAtlasHdr));
                 }
@@ -132,7 +132,7 @@ internal sealed unsafe class RenderRing
             case Proto.RenAtlasRegion when bytes >= sizeof(Proto.RenAtlasRegionHdr):
             {
                 var header = (Proto.RenAtlasRegionHdr*)payload;
-                if (bytes >= (ulong)sizeof(Proto.RenAtlasRegionHdr) + (ulong)header->width * header->height * 4)
+                if (PayloadChecks.Texture(header->width, header->height, bytes, (uint)sizeof(Proto.RenAtlasRegionHdr)))
                 {
                     atlas.SetRegion((int)header->x, (int)header->y, (int)header->width, (int)header->height, payload + sizeof(Proto.RenAtlasRegionHdr));
                 }
@@ -141,7 +141,7 @@ internal sealed unsafe class RenderRing
             case Proto.RenTexture when bytes >= sizeof(Proto.RenTextureHdr):
             {
                 var header = (Proto.RenTextureHdr*)payload;
-                if (header->id != 0 && bytes >= (ulong)sizeof(Proto.RenTextureHdr) + (ulong)header->width * header->height * 4)
+                if (header->id != 0 && PayloadChecks.Texture(header->width, header->height, bytes, (uint)sizeof(Proto.RenTextureHdr)))
                 {
                     atlas.SetTexture(header->id, (int)header->width, (int)header->height, payload + sizeof(Proto.RenTextureHdr));
                 }
@@ -164,6 +164,7 @@ internal sealed unsafe class RenderRing
                 if (bytes >= need)
                 {
                     var batches = (Proto.RenBatch*)(payload + sizeof(Proto.RenAvatarHdr));
+                    if (!PayloadChecks.Model(header->batchCount, header->vertexCount, batches)) break;
                     (type == Proto.RenAvatar ? avatar : body).Set(header->batchCount, header->vertexCount, batches, (Proto.RenVertex*)(batches + header->batchCount));
                 }
                 break;
@@ -176,6 +177,7 @@ internal sealed unsafe class RenderRing
                 if (bytes >= need)
                 {
                     var batches = (Proto.RenBatch*)(payload + sizeof(Proto.RenSceneHdr));
+                    if (!PayloadChecks.Model(header->batchCount, header->vertexCount, batches)) break;
                     sceneOrigin = Coords.ToUnity(header->originX, header->originY, header->originZ);
                     scene.Set(header->batchCount, header->vertexCount, batches, (Proto.RenVertex*)(batches + header->batchCount));
                 }

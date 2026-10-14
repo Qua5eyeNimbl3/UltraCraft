@@ -20,7 +20,9 @@ for name, sheet in tables.items():
             if target not in tables or row.get(col) not in {r['id'] for r in tables[target]['rows']}:
                 errors.append(f'{name}.{rid}.{col}: unresolved {target}/{row.get(col)}')
         if name=='hooks':
-            source=root.parents[1]/'work'/row['source']
+            import os
+            reference_root=Path(os.environ.get('ULTRACRAFT_REFERENCE_ROOT',str(root.parents[1]/'work')))
+            source=reference_root/row['source']
             if not source.is_file() or row['member'] not in source.read_text(encoding='utf-8-sig'):
                 errors.append(f'{name}.{rid}: hook source does not verify member')
 report={'specificationCells':cells,'errors':errors,'clean':not errors,'note':'Checks specification completeness. Runtime acceptance tests are reported independently.'}

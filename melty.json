@@ -1,0 +1,83 @@
+{
+  "mode": "installed",
+  "games": [
+    {
+      "role": "primary",
+      "slug": "ultrakill"
+    },
+    {
+      "role": "companion",
+      "slug": "minecraft-java"
+    }
+  ],
+  "notes": {
+    "firstLaunch": "The first Play opens Prism Launcher: sign in with the Microsoft account that owns Minecraft: Java Edition. Prism downloads Minecraft (a few minutes); Java is bundled. Later Plays start the companion automatically. ULTRAKILL is the visible game and Minecraft runs hidden behind it."
+  },
+  "setup": {
+    "done": {
+      "file": "{localappdata}/UltraCraft/Prism/instances/UltraCraft/.minecraft/logs/latest.log",
+      "contains": "Backend library:"
+    },
+    "label": "Minecraft",
+    "launch": {
+      "args": [
+        "--dir",
+        "{localappdata}/UltraCraft/Prism",
+        "--launch",
+        "UltraCraft"
+      ],
+      "kind": "exe",
+      "path": "{localappdata}/UltraCraft/Prism/prismlauncher.exe"
+    },
+    "stopWhenDone": false
+  },
+  "launch": {
+    "kind": "game"
+  },
+  "mappings": [
+    {
+      "to": "{game}/BepInEx/plugins/UltraCraft",
+      "from": "plugins/",
+      "component": "main"
+    },
+    {
+      "to": "{localappdata}/UltraCraft",
+      "from": "",
+      "component": "minecraft"
+    }
+  ],
+  "components": [
+    {
+      "id": "main",
+      "kind": "main",
+      "label": "UltraCraft",
+      "fileName": "UltraCraft-0.1.6.zip",
+      "required": true
+    },
+    {
+      "id": "minecraft",
+      "kind": "extra",
+      "label": "UltraCraft's Minecraft",
+      "fileName": "UltraCraft-Minecraft-0.1.6.zip",
+      "required": true
+    }
+  ],
+  "runtimeData": [
+    "{localappdata}/UltraCraft"
+  ],
+  "requirements": [
+    {
+      "id": "bepinex-5",
+      "kind": "loader"
+    }
+  ],
+  "schemaVersion": 1,
+  "test": {
+    "minutes": 12,
+    "checks": [
+      "bridge-ready",
+      "runtime-safety",
+      "movement-screen"
+    ]
+  }
+}

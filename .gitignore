@@ -11,3 +11,5 @@ runtime/
 private/
 .tools/
 dist/
+tests/**/bin/
+tests/**/obj/

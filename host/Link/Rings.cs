@@ -94,6 +94,7 @@ internal static unsafe class Rings
         }
         ulong head = *(ulong*)(ring + Proto.RingHeadOff);
         ulong tail = Volatile.Read(ref *(ulong*)(ring + Proto.RingTailOff));
+        if (head < tail || head - tail > size) return false;
         ulong pos = head % size;
         ulong padBytes = pos + msgBytes > size ? size - pos : 0;
         if (size - (head - tail) < msgBytes + padBytes)
@@ -118,28 +119,46 @@ internal static unsafe class Rings
     public delegate void MessageHandler(uint type, byte* payload, uint payloadBytes);
 
     /// <summary>Hands every pending message to <paramref name="handler"/>, up to about maxBytes.</summary>
-    public static void ByteDrain(byte* ring, long dataBytes, long maxBytes, MessageHandler handler)
+    public static void ByteDrain(byte* ring, long dataBytes, long maxBytes, MessageHandler handler, int budgetMs = 0)
     {
         byte* data = ring + Proto.RingDataOff;
         ulong size = (ulong)dataBytes;
         ulong head = Volatile.Read(ref *(ulong*)(ring + Proto.RingHeadOff));
         ulong tail = *(ulong*)(ring + Proto.RingTailOff);
-        ulong done = 0;
-        while (tail < head && done < (ulong)maxBytes)
+        // A restart or malformed header must never hand an out-of-mapping pointer to Unity.
+        if (head < tail || head - tail > size || (head & 7) != 0 || (tail & 7) != 0)
         {
+            Volatile.Write(ref *(ulong*)(ring + Proto.RingTailOff), head);
+            return;
+        }
+        ulong done = 0;
+        long began = System.Diagnostics.Stopwatch.GetTimestamp();
+        try
+        {
+          while (tail < head && done < (ulong)maxBytes)
+          {
+            if(done>0&&budgetMs>0&&(System.Diagnostics.Stopwatch.GetTimestamp()-began)*1000.0/System.Diagnostics.Stopwatch.Frequency>=budgetMs)break;
             ulong pos = tail % size;
-            var hdr = (Proto.MsgHeader*)(data + pos);
-            if (hdr->type == Proto.RenPad)
+            Proto.MsgHeader hdr = *(Proto.MsgHeader*)(data + pos);
+            if (hdr.type == Proto.RenPad)
             {
-                tail += size - pos;
+                ulong padding = size - pos;
+                if (hdr.payloadBytes != 0 || padding > head - tail) { tail = head; break; }
+                tail += padding;
                 continue;
             }
-            handler(hdr->type, data + pos + sizeof(Proto.MsgHeader), hdr->payloadBytes);
-            ulong msgBytes = ((ulong)sizeof(Proto.MsgHeader) + hdr->payloadBytes + 7) & ~7ul;
-            tail += msgBytes;
-            done += msgBytes;
+            ulong msgBytes = ((ulong)sizeof(Proto.MsgHeader) + hdr.payloadBytes + 7) & ~7ul;
+            if (msgBytes > size / 2 || msgBytes > size - pos || msgBytes > head - tail)
+            {
+                tail = head; // no safe boundary at which to resume a corrupt packet
+                break;
+            }
+            // Consume even if a handler rejects a valid packet; do not retry it every frame forever.
+            try { handler(hdr.type, data + pos + sizeof(Proto.MsgHeader), hdr.payloadBytes); }
+            finally { tail += msgBytes; done += msgBytes; }
+          }
         }
-        Volatile.Write(ref *(ulong*)(ring + Proto.RingTailOff), tail);
+        finally { Volatile.Write(ref *(ulong*)(ring + Proto.RingTailOff), tail); }
     }
 
     /// <summary>

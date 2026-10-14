@@ -14,7 +14,7 @@ using UltraCraft.Render;
 using UltraCraft.World;
 using Object=UnityEngine.Object;
 namespace UltraCraft;
-[BepInPlugin("local.ultracraft.bridge","UltraCraft","0.1.5")]
+[BepInPlugin("local.ultracraft.bridge","UltraCraft","0.1.6")]
 [DefaultExecutionOrder(1000)]
 public sealed class Plugin:BaseUnityPlugin {
     internal static Plugin? Instance;
@@ -45,6 +45,7 @@ public sealed class Plugin:BaseUnityPlugin {
     Companion companion=null!;
     float javaDayTime=-1;
     bool focusedBefore;
+    bool testReady;
     readonly JavaScreenGate screens=new();
     readonly WorldLighting lighting=new();
     void Awake(){
@@ -52,10 +53,11 @@ public sealed class Plugin:BaseUnityPlugin {
       Object.DontDestroyOnLoad(gameObject);
       Application.runInBackground=true;
       Log=Logger;started=Time.realtimeSinceStartup;
+      MeltyTest.Start();
       Instance=this;patches=new Harmony("local.ultracraft.bridge");patches.PatchAll(typeof(Plugin).Assembly);Logger.LogInfo("UltraCraft hooks: "+string.Join(", ",patches.GetPatchedMethods().Select(m=>m.DeclaringType?.Name+"."+m.Name)));
       if(!Proto.SelfCheck(Logger)||!Rings.SelfTest(Logger)){enabled=false;return;}
       link=new UltraLink(Logger);if(!link.Create(Proto.MappingName)){enabled=false;return;}
-      render=new RenderRing(link,Config);overlay=new Overlay(link);input=new InputRouter(link,Config);combat=new CrossCombat(link);companion=new Companion();WeaponMining.Link=link;waves.Prepare=feet=>navmesh.Build(feet,true);
+      render=new RenderRing(link,Config);overlay=new Overlay(link);input=new InputRouter(link,Config);combat=new CrossCombat(link);companion=new Companion();WeaponMining.Link=link;waves.Prepare=navmesh.Prepare;
       devFile=Path.Combine(Paths.PluginPath,"UltraCraft","dev-command.txt");
       // Only commands written while this game runs count: a leftover file must never act on a new session.
       if(File.Exists(devFile))lastCommand=File.GetLastWriteTimeUtc(devFile).Ticks;
@@ -116,6 +118,11 @@ public sealed class Plugin:BaseUnityPlugin {
         }
       }
       if(adopted&&world&&nm!=null){
+        if(!testReady&&render.SectionCount>=200&&overlay.HasFrame&&Time.realtimeSinceStartup-started>30&&!nm.dead&&!input.ScreenOpen){
+          testReady=true;MeltyTest.Report("bridge-ready",true,null!);
+          MeltyTest.Report("runtime-safety",Proto.SelfCheck(Logger)&&Rings.SelfTest(Logger),"protocol or ring checks failed");
+          MeltyTest.Report("movement-screen",nm.enabled&&nm.activated&&!nm.rb.isKinematic&&JavaScreenGate.RoundTrip(nm),"native movement or screen suspension/restoration failed");
+        }
         GuardAgainstVoid(nm);
         input.Update(guest);bool screen=input.ScreenOpen;
         screens.Sync(screen);
@@ -220,7 +227,7 @@ public sealed class Plugin:BaseUnityPlugin {
       GUI.Label(title,text,bigText);
       string waiting=companion!=null?companion.Status:"";
       GUI.Label(new Rect(Screen.width*.08f,Screen.height*.53f,Screen.width*.84f,Screen.height*.18f),
-        "This is normal - UltraCraft is NOT broken. Minecraft runs hidden in the background, so its window flashes and disappears.\nThe first start downloads Minecraft and can take a few minutes. Be patient: you'll drop into your world by yourself."+(string.IsNullOrEmpty(waiting)?"":"\n\n"+waiting),smallText);
+        "Minecraft runs in the background. Your world will appear here when it is ready.\nThe first start downloads Minecraft and can take a few minutes."+(string.IsNullOrEmpty(waiting)?"":"\n\n"+waiting),smallText);
     }
     void OnGUI(){if(!adopted){DrawWaitScreen();return;}
       if(input.Building||input.ScreenOpen)overlay.Draw(input.ScreenOpen,input.Cursor);

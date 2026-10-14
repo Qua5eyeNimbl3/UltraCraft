@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "id": "skycraft",
   "version": "${version}",
-  "name": "SkyCraft",
-  "description": "Play Skyrim with Minecraft physics, inventory and viewmodels.",
-  "authors": ["chasmlol"],
+  "name": "UltraCraft Java Companion",
+  "description": "Minecraft survival simulation for UltraCraft's ULTRAKILL bridge.",
+  "authors": ["Qua5eyeNimbl3", "chasmlol", "aeironnsarmiento"],
   "contact": {
-    "sources": "https://github.com/chasmlol/SkyCraft"
+    "sources": "https://github.com/Qua5eyeNimbl3/UltraCraft"
   },
   "license": "MIT",
   "environment": "client",

@@ -65,7 +65,7 @@ public final class SkyLink {
 			return;
 		}
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment name = arena.allocateFrom(MAPPING_NAME + "_minecraft", StandardCharsets.UTF_16LE);
+			MemorySegment name = WideString.allocate(arena, MAPPING_NAME + "_minecraft");
 			runningMutex = (MemorySegment) CREATE_MUTEX.invokeExact(MemorySegment.NULL, 0, name);
 		} catch (Throwable t) {
 			SkyCraft.LOG.warn("SkyCraft: couldn't create the running-Minecraft mutex", t);
@@ -125,7 +125,7 @@ public final class SkyLink {
 		}
 		lastOpenAttempt = now;
 		try (Arena arena = Arena.ofConfined()) {
-			MemorySegment name = arena.allocateFrom(MAPPING_NAME, StandardCharsets.UTF_16LE);
+			MemorySegment name = WideString.allocate(arena, MAPPING_NAME);
 			MemorySegment handle = (MemorySegment) OPEN_FILE_MAPPING.invokeExact(OPEN_STATE, FILE_MAP_ALL_ACCESS, 0, name);
 			if (handle.address() == 0) {
 				// Say why, once per reason: 2 is "Skyrim hasn't made it yet" (normal while it loads),

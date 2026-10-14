@@ -14,8 +14,15 @@ internal sealed class NavmeshFollower {
     readonly List<NavMeshBuildMarkup> markups=new();
     readonly List<AsyncOperation> pending=new();
     Vector3 center;bool built;float lastBuild,lastEnemyCheck;bool enemies;
+    public bool Ready { get { pending.RemoveAll(p=>p.isDone);return built&&pending.Count==0; } }
     float Radius=>Design.Encounters_Waves.NavmeshRadiusBlocks*Coords.Scale;
-    public void ClearSceneNavmesh(){NavMesh.RemoveAllNavMeshData();meshes.Clear();built=false;}
+    public void ClearSceneNavmesh(){Dispose();NavMesh.RemoveAllNavMeshData();built=false;}
+    public bool Prepare(Vector3 feet){
+      if(pending.Count>0&&!Ready)return false;
+      var flat=feet-center;flat.y=0;
+      if(!built||flat.magnitude>Radius*.35f||Mathf.Abs(feet.y-center.y)>16||Time.unscaledTime-lastBuild>45){Build(feet,false);return Ready;}
+      return Ready;
+    }
     public void Update(Vector3 feet,bool waveAlive){
       if(Time.unscaledTime-lastEnemyCheck>2){lastEnemyCheck=Time.unscaledTime;var tracker=MonoSingleton<EnemyTracker>.Instance;enemies=tracker!=null&&tracker.GetCurrentEnemies().Count>0;}
       if(!(waveAlive||enemies))return;
@@ -25,6 +32,8 @@ internal sealed class NavmeshFollower {
     }
     /// <summary>Build (synchronously when enemies are about to be placed on it).</summary>
     public void Build(Vector3 feet,bool now){
+      // Keep sources and native data stable while a worker owns them.
+      pending.RemoveAll(p=>p.isDone);if(pending.Count>0)return;
       center=feet;built=true;lastBuild=Time.unscaledTime;
       var bounds=new Bounds(feet,new Vector3(Radius*2,Radius,Radius*2));
       sources.Clear();
@@ -34,9 +43,8 @@ internal sealed class NavmeshFollower {
         settings.agentClimb=Mathf.Max(settings.agentClimb,(float)Design.Encounters_Waves.NavmeshClimbBlocks*Coords.Scale);
         settings.overrideVoxelSize=true;settings.voxelSize=Mathf.Clamp(settings.agentRadius/3f,.25f,.5f);
         if(!meshes.TryGetValue(settings.agentTypeID,out var mesh)){var data=new NavMeshData(settings.agentTypeID);mesh=(data,NavMesh.AddNavMeshData(data));meshes[settings.agentTypeID]=mesh;}
-        if(now)NavMeshBuilder.UpdateNavMeshData(mesh.data,settings,sources,bounds);
-        else pending.Add(NavMeshBuilder.UpdateNavMeshDataAsync(mesh.data,settings,sources,bounds));
+        pending.Add(NavMeshBuilder.UpdateNavMeshDataAsync(mesh.data,settings,sources,bounds));
       }
     }
-    public void Dispose(){foreach(var m in meshes.Values)m.instance.Remove();meshes.Clear();}
+    public void Dispose(){foreach(var m in meshes.Values){NavMeshBuilder.Cancel(m.data);m.instance.Remove();Object.Destroy(m.data);}pending.Clear();meshes.Clear();built=false;}
 }

@@ -145,7 +145,7 @@ internal sealed unsafe class Atlas
     public void SetRegion(int x, int y, int width, int height, byte* pixels)
     {
         if (!textures.TryGetValue(0, out Texture2D? texture) || width <= 0 || height <= 0 || x < 0 || y < 0
-            || x + width > texture.width || y + height > texture.height)
+            || (long)x + width > texture.width || (long)y + height > texture.height)
         {
             return;
         }

@@ -5,9 +5,9 @@
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <AssemblyName>UltraCraft</AssemblyName>
-    <Version>0.1.0</Version>
+    <Version>0.1.6</Version>
     <GameDir Condition="'$(GameDir)'==''">C:/Program Files (x86)/Steam/steamapps/common/ULTRAKILL</GameDir>
-    <BepDir>$(MSBuildThisFileDirectory)../../../work/runtime/bepinex/BepInEx/core</BepDir>
+    <BepDir Condition="'$(BepDir)'==''">$(GameDir)/BepInEx/core</BepDir>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="$(GameDir)/ULTRAKILL_Data/Managed/UnityEngine*.dll"><Private>false</Private></Reference>

@@ -20,6 +20,9 @@ $fabricApiJar = "fabric-api-0.161.0+26.3.jar"
 $fabricApiUrl = "https://cdn.modrinth.com/data/P7dR8mSH/versions/bNnaTiuM/fabric-api-0.161.0%2B26.3.jar"
 $fabricApiSha512 = "ed6b2586d6fde11fde8472f5a527c51e99b67026e46f94d4bfd85e7e28ce5ee299173ee16ad576ceb51f39f98d30a811086a6deb1a86a524859cc16e12da109d"
 $fabricApiLicenseUrl = "https://raw.githubusercontent.com/FabricMC/fabric/HEAD/LICENSE"
+$javaZip = "OpenJDK25U-jre_x64_windows_hotspot_25.0.4.1_1.zip"
+$javaUrl = "https://github.com/adoptium/temurin25-binaries/releases/download/jdk-25.0.4.1%2B1/$javaZip"
+$javaSha256 = "4c95451cea98556def2c54f7782933f52a26d4a36bd85e1d59f0364464828b07"
 
 function Get-Pinned([string]$url, [string]$path, [string]$algorithm, [string]$hash) {
     if (-not (Test-Path $path)) {
@@ -60,23 +63,40 @@ Get-Pinned $prismUrl "$cache\$prismZip" SHA256 $prismSha256
 Get-Pinned $prismLicenseUrl "$cache\PrismLauncher-$prismVersion-LICENSE.txt" "" ""
 Get-Pinned $fabricApiUrl "$cache\$fabricApiJar" SHA512 $fabricApiSha512
 Get-Pinned $fabricApiLicenseUrl "$cache\FabricAPI-LICENSE.txt" "" ""
+Get-Pinned $javaUrl "$cache\$javaZip" SHA256 $javaSha256
 
 $dist = "$root\dist"
 New-Item -ItemType Directory $dist -Force | Out-Null
 $stage = "$dist\stage"
+# Deletion is limited to this release's staging folder.
+if ([System.IO.Path]::GetFullPath($stage) -ne (Join-Path ([System.IO.Path]::GetFullPath($root)) 'dist\stage')) { throw 'Unsafe staging path' }
 if (Test-Path $stage) { Remove-Item $stage -Recurse -Force }
 $bundle = New-Item -ItemType Directory "$stage\minecraft" -Force
 Expand-Archive "$cache\$prismZip" "$bundle\Prism" -Force
 Copy-Item -Recurse "$root\tools\melty-bundle\*" $bundle -Force
+$javaStage = New-Item -ItemType Directory "$stage\java" -Force
+Expand-Archive "$cache\$javaZip" $javaStage -Force
+$javaRoot = Get-ChildItem $javaStage -Directory | Select-Object -First 1
+if (-not (Test-Path "$($javaRoot.FullName)\bin\javaw.exe")) { throw 'Java archive missing javaw.exe' }
+Copy-Item -LiteralPath $javaRoot.FullName -Destination "$bundle\Prism\java\UltraCraft-25" -Recurse -Force
 Copy-Item "$cache\PrismLauncher-$prismVersion-LICENSE.txt" "$bundle\Prism\LICENSE-PrismLauncher.txt"
 Copy-Item "$cache\FabricAPI-LICENSE.txt" "$bundle\Prism\LICENSE-FabricAPI.txt"
 Copy-Item "$root\THIRD-PARTY\SkyCraft-PeakCraft-MIT.txt" "$bundle\Prism\LICENSE-SkyCraft-PeakCraft.txt"
 Copy-Item "$root\LICENSE" "$bundle\Prism\LICENSE-UltraCraft.txt"
 Copy-Item "$root\tools\melty-bundle-readme.txt" "$bundle\README.txt"
+$csc = 'C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe'
+& $csc /nologo /target:winexe /optimize+ "/out:$bundle\Reset UltraCraft World.exe" /r:System.Windows.Forms.dll /r:System.IO.Compression.dll /r:System.IO.Compression.FileSystem.dll "$root\tools\launcher\ResetWorld.cs"
+if ($LASTEXITCODE -ne 0) { throw 'Reset tool build failed' }
 $mods = New-Item -ItemType Directory "$bundle\Prism\instances\UltraCraft\.minecraft\mods" -Force
 Copy-Item "$cache\$fabricApiJar" $mods
 Copy-Item $jar.FullName "$mods\ultracraft-$Version.jar"
 Set-Content "$bundle\bundle-version.txt" "UltraCraft $Version, Prism Launcher $prismVersion, $fabricApiJar" -NoNewline
+
+# Verify the executable the recipe launches, the instance, and its runtime before accepting a package.
+foreach ($entry in @('Prism\prismlauncher.exe','Prism\portable.txt','Prism\java\UltraCraft-25\bin\javaw.exe','Prism\instances\UltraCraft\mmc-pack.json')) {
+    if (-not (Test-Path -LiteralPath "$bundle\$entry" -PathType Leaf)) { throw "Package missing $entry" }
+}
+if (Get-ChildItem -LiteralPath $bundle -Recurse -File | Where-Object { $_.Name -match '^(accounts(?:-old)?\.json|client\.jar|minecraft\.jar)$' -or $_.FullName -match '\\saves\\' }) { throw 'Private account or game data in package' }
 
 $mcEntries = [ordered]@{}
 Add-Folder $mcEntries $bundle ""

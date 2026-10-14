@@ -21,7 +21,8 @@ internal sealed class Waves {
     public int Wave {get;private set;}
     public bool Running=>running;
     public bool Night {get;private set;}
-    public Action<Vector3>? Prepare;
+    public Func<Vector3,bool>? Prepare;
+    bool waitingForNavigation;
     public int Alive{get{alive.RemoveAll(e=>e==null||e.dead);return alive.Count;}}
     public int Natural{get{natural.RemoveAll(e=>e==null||e.dead);return natural.Count;}}
     public float NextWaveIn=>running&&clearedAt>=0?Mathf.Max(0,(float)Design.Encounters_Waves.AutoNextDelaySeconds-(Time.time-clearedAt)):-1;
@@ -46,7 +47,8 @@ internal sealed class Waves {
       var database=Database();
       if(database.Count==0){Plugin.Log.LogWarning("UltraCraft waves: native enemy registry is not ready");return;}
       running=true;clearedAt=-1;
-      Prepare?.Invoke(feet); // walkers need the navmesh under them before they land
+      if(Prepare!=null&&!Prepare(feet)){waitingForNavigation=true;return;}
+      waitingForNavigation=false;
       var composition=waves[Mathf.Min(Wave,waves.Count-1)];int extra=Mathf.Max(0,Wave-(waves.Count-1));
       Wave++;int spawned=0;
       foreach(var (type,count) in composition){
@@ -72,7 +74,8 @@ internal sealed class Waves {
     public void Update(Vector3 feet,Vector3 facing,float dayTime){
       bool night=dayTime>=Design.Encounters_Waves.NightStartTicks&&dayTime<Design.Encounters_Waves.NightEndTicks;
       if(night&&!Night){Night=true;Wave=0;Plugin.Log.LogInfo("UltraCraft: night falls, waves begin");Spawn(feet,facing);}
-      else if(!night&&Night){Night=false;running=false;clearedAt=-1;Plugin.Log.LogInfo($"UltraCraft: dawn after wave {Wave}");}
+      else if(!night&&Night){Night=false;running=false;waitingForNavigation=false;clearedAt=-1;Plugin.Log.LogInfo($"UltraCraft: dawn after wave {Wave}");}
+      if(waitingForNavigation&&running)Spawn(feet,facing);
       if(running&&Wave>0&&Alive==0){
         if(clearedAt<0){clearedAt=Time.time;Plugin.Log.LogInfo($"UltraCraft: wave {Wave} cleared");}
         else if(Time.time-clearedAt>=Design.Encounters_Waves.AutoNextDelaySeconds)Spawn(feet,facing);

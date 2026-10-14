@@ -193,7 +193,7 @@ internal sealed unsafe class UltraLink
     }
 
     public void DrainRender(long maxBytes, Rings.MessageHandler handler)
-        => Rings.ByteDrain(@base + Proto.OffRenderRing, Proto.RenRingDataBytes, maxBytes, handler);
+        => Rings.ByteDrain(@base + Proto.OffRenderRing, Proto.RenRingDataBytes, maxBytes, handler, 5);
 
     /// <summary>The block-selection box from the world-entities table (Minecraft coords), if Minecraft shows one.</summary>
     public bool ReadSelection(out UnityEngine.Vector3 min, out UnityEngine.Vector3 max)
@@ -271,7 +271,9 @@ internal sealed unsafe class UltraLink
             return false;
         }
         int old = Interlocked.Exchange(ref state, overlayFront);
-        overlayFront = old & 3;
+        int next = old & 3;
+        if (next >= Proto.OverlaySlots) return false;
+        overlayFront = next;
         return true;
     }
 

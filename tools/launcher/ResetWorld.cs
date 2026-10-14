@@ -9,14 +9,13 @@ using System.Windows.Forms;
 
 internal static class ResetWorld
 {
-    const string Runtime = @"C:\Users\homer\Documents\Codex\2026-10-05\files-pasted-by-the-user-help-2\work\runtime";
+    static readonly string Runtime = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "UltraCraft", "Prism");
 
     [STAThread]
     static void Main()
     {
-        string appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-        string save = Path.Combine(appData, @"PrismLauncher\instances\UltraCraft-Lab\.minecraft\saves\UltraCraft");
-        string backups = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), @".universal-modder\backups\ultracraft-java-save");
+        string save = Path.Combine(Runtime, @"instances\UltraCraft\.minecraft\saves\UltraCraft");
+        string backups = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"UltraCraft\Backups");
         if (Process.GetProcessesByName("ULTRAKILL").Length > 0 || CompanionRunning())
         {
             Show("Close UltraCraft (ULTRAKILL) first, wait a few seconds for the world to save, then run the reset again.", MessageBoxIcon.Information);
