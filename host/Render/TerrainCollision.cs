@@ -9,6 +9,9 @@ internal sealed unsafe class TerrainCollision {
     readonly Dictionary<(int,int,int,int),ulong> hashes=new();
     readonly bool[] solidCells=new bool[4096]; // reused: every cell is rewritten per section
     GameObject? root;
+    static Transform? terrainRoot;
+    /// <summary>True for a collider of the Java terrain (not native geometry or anything else).</summary>
+    public static bool Owns(Collider c)=>c!=null&&terrainRoot!=null&&c.transform.parent==terrainRoot;
     public int Count=>sections.Count;
     public void Clear(){foreach(var p in sections.Values)UnityEngine.Object.Destroy(p);sections.Clear();hashes.Clear();}
     /// <summary>Drops collision for sections more than <paramref name="radius"/> chunks from the given chunk.</summary>
@@ -26,7 +29,7 @@ internal sealed unsafe class TerrainCollision {
       hashes[k]=h;return false;
     }
     GameObject Begin(int x,int y,int z,int kind){
-      if(root==null){root=new GameObject("UltraCraft terrain collision");UnityEngine.Object.DontDestroyOnLoad(root);}
+      if(root==null){root=new GameObject("UltraCraft terrain collision");UnityEngine.Object.DontDestroyOnLoad(root);terrainRoot=root.transform;}
       var k=(x,y,z,kind);if(sections.TryGetValue(k,out var old))UnityEngine.Object.Destroy(old);
       var go=new GameObject("UltraCraft collision");go.transform.SetParent(root.transform,false);
       go.transform.position=Coords.ToUnity(x*16,y*16,z*16);go.layer=EnvironmentLayer();go.tag="Floor";

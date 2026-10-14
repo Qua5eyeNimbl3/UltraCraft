@@ -15,7 +15,7 @@ namespace UltraCraft.World;
 /// hittable stand-ins (SkyCombat) and reports Minecraft melee/arrow hits back as EvHitActor.</para>
 /// </summary>
 internal sealed class CrossCombat {
-    sealed class Mob {public GameObject Root=null!;public BoxCollider Body=null!,Head=null!;public EnemyIdentifier Eid=null!;public int Seen;public Vector3 At=new(float.NaN,0,0);public Vector4 Shape;}
+    sealed class Mob {public GameObject Root=null!;public BoxCollider Body=null!,Head=null!,Hook=null!;public EnemyIdentifier Eid=null!;public int Seen;public Vector3 At=new(float.NaN,0,0);public Vector4 Shape;}
     static readonly Dictionary<EnemyIdentifier,int> proxyIds=new();
     static readonly Dictionary<int,(float damage,Vector3 force)> pendingHits=new();
     readonly UltraLink link;
@@ -28,7 +28,8 @@ internal sealed class CrossCombat {
     GameObject? root;
     int frame;
     public int MobCount=>mobs.Count;
-    public CrossCombat(UltraLink link){this.link=link;}
+    internal static CrossCombat? Current;
+    public CrossCombat(UltraLink link){this.link=link;Current=this;}
 
     Collider[] playerColliders=System.Array.Empty<Collider>();
     public void Update(Vector3 feet,NewMovement player){
@@ -58,6 +59,11 @@ internal sealed class CrossCombat {
           mob.Shape=shape;
           mob.Body.center=new Vector3(0,height*.5f,0);mob.Body.size=new Vector3(width,height,width);
           mob.Head.center=new Vector3(0,eye,0);mob.Head.size=Vector3.one*head;
+          mob.Hook.center=mob.Body.center;mob.Hook.size=mob.Body.size;
+          // The Whiplash yanks light enemies to the player and pulls the player to heavy ones (HookArm's
+          // own lists): small Minecraft mobs count as a Filth, big ones as a Cerberus.
+          float volume=Mathf.Max(e.scale,.3f)*Mathf.Max(e.scale,.3f)*e.ext0;
+          mob.Eid.enemyType=volume>=Design.Whiplash_Arm.HeavyMobVolumeBlocks?EnemyType.Cerberus:EnemyType.Filth;
         }
       }
       gone.Clear();foreach(var pair in mobs)if(pair.Value.Seen!=frame)gone.Add(pair.Key);
@@ -68,20 +74,28 @@ internal sealed class CrossCombat {
       var holder=new GameObject("inactive identifier");holder.SetActive(false);holder.transform.SetParent(go.transform,false);
       var eid=holder.AddComponent<EnemyIdentifier>();eid.enemyType=EnemyType.Filth;eid.dontUnlockBestiary=true;
       proxyIds[eid]=id;
-      return new Mob{Root=go,Eid=eid,Body=Part(go,"Body",eid),Head=Part(go,"Head",eid)};
+      // Hook: the trigger the Whiplash catches, like the one on every ULTRAKILL enemy (it ignores layer 10).
+      return new Mob{Root=go,Eid=eid,Body=Part(go,"Body",eid),Head=Part(go,"Head",eid),Hook=Part(go,"Untagged",eid,Design.Whiplash_Arm.HookLayer,true)};
     }
     /// <summary>
     /// Like a real enemy limb: a solid collider with its own kinematic body. The revolver's main
     /// sphere-cast ignores triggers and reads hit.transform, which is the attached rigidbody's object,
     /// so a trigger or a rigidbody on the parent made the shot pass through. The player walks through.
     /// </summary>
-    BoxCollider Part(GameObject parent,string tag,EnemyIdentifier eid){
-      var go=new GameObject(tag);go.transform.SetParent(parent.transform,false);go.layer=Design.Combat_Bridge.MobProxyLayer;go.tag=tag;
+    BoxCollider Part(GameObject parent,string tag,EnemyIdentifier eid,int layer=Design.Combat_Bridge.MobProxyLayer,bool trigger=false){
+      var go=new GameObject(trigger?"Hook":tag);go.transform.SetParent(parent.transform,false);go.layer=layer;go.tag=tag;
       var rb=go.AddComponent<Rigidbody>();rb.isKinematic=true;rb.useGravity=false;
-      var box=go.AddComponent<BoxCollider>();
+      var box=go.AddComponent<BoxCollider>();box.isTrigger=trigger;
       foreach(var c in playerColliders)if(c!=null)Physics.IgnoreCollision(box,c);
       go.AddComponent<EnemyIdentifierIdentifier>().eid=eid;
       return box;
+    }
+    /// <summary>The Minecraft entity behind a mob hitbox's identifier.</summary>
+    public static bool TryMob(EnemyIdentifier eid,out int id){id=0;return eid!=null&&proxyIds.TryGetValue(eid,out id);}
+    /// <summary>Sets a Minecraft mob's velocity (Unity units per second) for the next server tick: the Whiplash pulling it.</summary>
+    public void Pull(int id,Vector3 velocity){
+      var v=velocity/Coords.Scale/20f; // blocks per tick, Z flipped below
+      link.PushInput(Proto.InputType.PullEntity,(ushort)Mathf.Clamp(Mathf.RoundToInt(v.y*1000)+32768,0,65535),id,Mathf.RoundToInt(v.x*1000),Mathf.RoundToInt(-v.z*1000));
     }
     /// <summary>Harmony prefix target: true when the hit was on a Minecraft mob (and is forwarded).</summary>
     public static bool Intercept(EnemyIdentifier eid,GameObject target,Vector3 force,float multiplier,float critMultiplier){
@@ -149,7 +163,7 @@ internal sealed class CrossCombat {
       foreach(var pair in actors){if(pair.Value==null||pair.Value.dead)continue;float before=pair.Value.health;HitActor(new Proto.GuestEvent{type=Proto.EvHitActor,formId=(uint)pair.Key,a=7,b=0,c=1,d=.4f});Plugin.Log.LogInfo($"UltraCraft test: native {pair.Value.enemyType} health {before:F2} -> {pair.Value.health:F2} dead={pair.Value.dead}");break;}
       Plugin.Log.LogInfo($"UltraCraft test: {actors.Count} native enemies published to Java");
     }
-    public void Dispose(){if(root!=null)Object.Destroy(root);mobs.Clear();proxyIds.Clear();}
+    public void Dispose(){if(root!=null)Object.Destroy(root);mobs.Clear();proxyIds.Clear();if(Current==this)Current=null;}
 }
 
 [HarmonyPatch(typeof(EnemyIdentifier),nameof(EnemyIdentifier.DeliverDamage))]

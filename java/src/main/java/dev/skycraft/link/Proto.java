@@ -43,6 +43,7 @@ public final class Proto {
 	public static final int IN_BREAK_BLOCK = 10; // code = power*100 (bits 0-11) | 0x1000 saw, a,b,c = block
 	public static final int IN_BLAST = 11; // code = radius*100, a,b,c = centre * 100
 	public static final int IN_HIT_ENTITY = 9; // a = entity id, b = damage * 100, c = attacker yaw * 100
+	public static final int IN_PULL_ENTITY = 12; // a = entity id, b,c = x,z blocks/tick * 1000, code = y blocks/tick * 1000 + 32768
 	public static final int HURT_MELEE = 0;
 	public static final int HURT_PROJECTILE = 1;
 	public static final int HURT_MAGIC = 2;
@@ -73,6 +74,7 @@ public final class Proto {
 	public static final int EV_ARROW_STUCK = 4;
 	public static final int EV_SKILL_USE = 5;
 	public static final int EV_TIME = 7; // a = overworld day time 0..24000, b = 1 when dark outside
+	public static final int EV_DIMENSION = 8; // a = 0 overworld, 1 nether, 2 end, 3 other; b = 1 when the player just travelled there
 	public static final int EV_NATIVE_SPAWN = 6; // formId = index into Natural_Night.Replacements, a,b,c = feet position
 	// Skyrim skills (ActorValue) Minecraft reports use of; weapon skills come from EV_HIT_ACTOR.
 	public static final int SKILL_BLOCK = 9;

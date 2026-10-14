@@ -161,6 +161,7 @@ internal static unsafe class Proto
         BreakBlock = 10, // code = power*100 | 0x1000 saw, a,b,c = Minecraft block
         Blast = 11, // code = radius*100, a,b,c = Minecraft centre * 100
         HitEntity = 9, // a = Minecraft entity id, b = damage * 100, c = attacker yaw * 100
+        PullEntity = 12, // a = Minecraft entity id, b,c = x,z blocks per tick * 1000, code = y blocks per tick * 1000 + 32768
     }
 
     public const ushort HurtOther = 3;
@@ -176,6 +177,7 @@ internal static unsafe class Proto
     public const uint EvHitActor = 1;
     public const uint EvPlayerDied = 2;
     public const uint EvTime = 7; // a = Java overworld day time 0..24000, b = 1 when dark outside
+    public const uint EvDimension = 8; // a = 0 overworld, 1 nether, 2 end, 3 other; b = 1 when the player just travelled there
     public const uint EvNativeSpawn = 6; // formId = index into Natural_Night.Replacements, a,b,c = Minecraft feet position
     public const uint ActorHostile = 1;
 

@@ -25,11 +25,9 @@ public final class SkyCraft implements ModInitializer {
 		dev.skycraft.net.SkyNet.init();
 		dev.skycraft.world.SkyDig.init();
 		ServerLifecycleEvents.SERVER_STARTED.register(SkyCraft::configureServer);
-		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
-
-
-
-		});
+		// A save from before 0.1.8 can hold the player inside blocks (a portal put them at the old
+		// dimension's coordinates): free them before ULTRAKILL places its player at theirs.
+		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> server.execute(() -> dev.skycraft.world.SafeSpot.rescueIfBuried(handler.player)));
 	}
 
 	/**

@@ -8,6 +8,8 @@ Mine resources, craft in Minecraft's inventory and crafting-table screens, and p
 
 **Natural enemies:** in dark caves and at night, mapped monsters become native enemies: zombie → Filth, skeleton → Stray, creeper → Drone, spider → Schism, enderman → Virtue, witch → Mindflayer, pillager/vindicator → Soldier. Passive mobs stay. Guns damage Minecraft mobs, and Minecraft weapons damage native enemies.
 
+**Whiplash:** works like ULTRAKILL's and grapples blocks. Small Minecraft mobs (zombies, skeletons, animals) and light ULTRAKILL enemies get yanked to you; big mobs (iron golems, ravagers, horses, the warden) and heavy enemies pull you to them. Throw it at any block more than a couple of blocks away and it latches on and pulls you there; jump while being pulled to let go with a boost. Tuned in `sheets/whiplash.json`.
+
 **Guns mine:** revolver shots, pellets and nails chip blocks; the railcannon blasts a sphere; rockets/explosions make craters; the thrown chainsaw cuts logs. Broken blocks drop resources according to the Java bridge's mining rules.
 
 **New worlds:** close UltraCraft and run Reset UltraCraft World.exe in %LOCALAPPDATA%\UltraCraft. It asks first, backs up the current world, then removes it. Next Play generates a random seed. Never reset a player's existing world to test a release.

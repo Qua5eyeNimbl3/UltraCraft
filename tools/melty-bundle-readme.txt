@@ -12,6 +12,7 @@ O Minecraft options, G gun terminal (near camp), H return to camp.
 
 Every night the sky turns blood red and ULTRAKILL enemy waves attack. Guns hurt Minecraft mobs,
 Minecraft weapons hurt ULTRAKILL enemies, and guns mine blocks.
+The Whiplash yanks small mobs to you, pulls you to big ones, and grapples any block a few blocks away.
 
 To start a new world with a random seed, close UltraCraft and run "Reset UltraCraft World.exe"
 from %LOCALAPPDATA%\UltraCraft. It asks first and backs up the world before removing it.

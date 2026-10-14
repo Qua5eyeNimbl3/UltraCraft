@@ -51,14 +51,14 @@
       "id": "main",
       "kind": "main",
       "label": "UltraCraft",
-      "fileName": "UltraCraft-0.1.7.zip",
+      "fileName": "UltraCraft-0.1.8.zip",
       "required": true
     },
     {
       "id": "minecraft",
       "kind": "extra",
       "label": "UltraCraft's Minecraft",
-      "fileName": "UltraCraft-Minecraft-0.1.7.zip",
+      "fileName": "UltraCraft-Minecraft-0.1.8.zip",
       "required": true
     }
   ],

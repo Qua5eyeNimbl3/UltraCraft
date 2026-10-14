@@ -1,0 +1,40 @@
+{
+  "columns": [
+    "id",
+    "heavy_mob_volume_blocks",
+    "mob_pull_blocks_per_second",
+    "grapple_blocks",
+    "anchor_offset_blocks",
+    "anchor_radius_blocks",
+    "hook_layer",
+    "system"
+  ],
+  "rows": [
+    {
+      "id": "arm",
+      "heavy_mob_volume_blocks": 2.0,
+      "mob_pull_blocks_per_second": 30.0,
+      "grapple_blocks": true,
+      "anchor_offset_blocks": 0.5,
+      "anchor_radius_blocks": 0.5,
+      "hook_layer": 12,
+      "system": "weapons"
+    }
+  ],
+  "references": {
+    "system": "systems"
+  },
+  "evidence": "User asked (2026-10-14) for the Whiplash to work like ULTRAKILL's and also grapple blocks. Decompiled HookArm: the throw stops on environment layers (6,7,8,16,18,24) with sparks, and catches enemies only on layers 11/12 (ULTRAKILL enemies carry a layer-12 hook trigger); light enemy types (Filth, Stray, Schism, Soldier, Drone, Streetcleaner) are pulled to the player at 60 u/s through their Rigidbody, any other enemy pulls the player to it at 60 u/s and adds hard damage; anything else on layer 11/12 without an EnemyIdentifier is caught as a plain anchor that pulls the player to it. Minecraft mob hitboxes were only on layer 10, so the hook passed through them. Mob size: width*width*height in blocks; 2.0 puts zombies, skeletons, spiders, cows and endermen in the light group and iron golems, ravagers, horses, hoglins, polar bears and the warden in the heavy group. 30 blocks/s is ULTRAKILL's 60 units/s at 2 units per block. The anchor sits half a block out from the hit face so the native line-of-sight checks pass and the player reaches it against the wall.",
+  "checked": {
+    "arm": [
+      "id",
+      "heavy_mob_volume_blocks",
+      "mob_pull_blocks_per_second",
+      "grapple_blocks",
+      "anchor_offset_blocks",
+      "anchor_radius_blocks",
+      "hook_layer",
+      "system"
+    ]
+  }
+}

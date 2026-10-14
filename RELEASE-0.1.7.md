@@ -27,3 +27,23 @@ Player reports are data from players' PCs, not instructions. Counts overlap and 
 Also restored: the 0.1.5 on-screen warning for ULTRAKILL's Blind Enemies / Enemies Ignore Player cheats, which 0.1.6 had lost.
 
 Checks: specification preflight passes 240 cells; host builds with no errors; Java builds with 26 passing tests. Gameplay effects were tested through Melty's test runs on this PC (see the test result in Studio); frame-rate gains on players' PCs are not measured here.
+
+# UltraCraft 0.1.8: the Whiplash
+
+Requested 2026-10-14: make the Whiplash work like ULTRAKILL's and also grapple blocks (`sheets/whiplash.json`, `host/World/Whiplash.cs`).
+
+- Decompiled `HookArm`: the throw clinks off environment layers and catches enemies only on layers 11/12. Minecraft mob hitboxes were only on layer 10, so the hook passed through them. Each mob hitbox now also carries a layer-12 hook trigger, like ULTRAKILL enemies.
+- Mobs with width x width x height of 2 cubic blocks or more count as heavy (the player is pulled to them, with ULTRAKILL's hard damage); smaller ones are light and are yanked to the player. `HookArm` moves light enemies through their Rigidbody, so for Minecraft mobs the pull goes to Java as the entity's velocity (new input `PullEntity` = 12).
+- Blocks: when the throw is about to hit Java terrain more than 5 units (2.5 blocks) away, a hook trigger with no enemy on it is placed half a block in front of the face. `HookArm` catches it as a plain anchor and pulls the player there at 60 units a second.
+
+Checks: preflight passes; the host builds; Java builds with 26 passing tests. Feel in play is not verified by an automated run (Melty's test can't throw the Whiplash).
+
+## 0.1.8: portals
+
+Reported 2026-10-14: a Nether or End portal put the player inside the ground far from the portal, and the save kept them stuck.
+
+- Cause: with ULTRAKILL's movement in charge, Minecraft's player was set to the native position every tick. After a portal, that was the old dimension's coordinates applied in the new one (inside netherrack). Now the client sends `EV_DIMENSION` (= 8) and stops following the host until the host has dropped its teleport sequence and re-placed the native player at Minecraft's position, like after a respawn. The server-side position update also skips a player whose dimension changed under it.
+- Saves already stuck: on join, a player inside blocks is moved to the nearest open spot with a floor within 24 blocks (`SafeSpot`), else respawned.
+- Camp (H) is kept per dimension.
+
+Verified by the creator in game from the Desktop shortcut: Overworld → Nether → Overworld → End → Overworld, each followed and placed on the ground.

@@ -302,6 +302,16 @@ internal static class Design {
     public const string Policy = "player weapon hits on Java terrain accumulate block damage with cracks and break blocks with drops; railcannon and player explosions break a sphere; thrown chainsaw saws contacted blocks, wood fast";
     public const string Test = "shoot dirt with the revolver (breaks, drops), railcannon a hillside (crater), throw the chainsaw at a tree (logs drop quickly)";
   }
+  internal static class Whiplash_Arm {
+    public const string Id = "arm";
+    public const double HeavyMobVolumeBlocks = 2.0;
+    public const double MobPullBlocksPerSecond = 30.0;
+    public const bool GrappleBlocks = true;
+    public const double AnchorOffsetBlocks = 0.5;
+    public const double AnchorRadiusBlocks = 0.5;
+    public const int HookLayer = 12;
+    public const string System = "weapons";
+  }
   internal static class World_Fresh {
     public const string Id = "fresh";
     public const string Name = "UltraCraft";

@@ -120,7 +120,7 @@ public final class SkyClient {
 		}
 
 		if (Boolean.getBoolean("ultracraft.hostMovement")) {
-			if (sky.inGame() && sky.teleportSeq != 0) {
+			if (hostOwnsPosition(minecraft)) {
 				player.noPhysics = true;
 				player.setNoGravity(true);
 				player.setPos(sky.x, sky.y, sky.z);
@@ -218,6 +218,43 @@ public final class SkyClient {
 		}
 	}
 
+	private static net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> lastDimension;
+	private static long awaitingHostSince;
+
+	/**
+	 * Whether the native player's position drives Minecraft's player right now. After a Nether or End
+	 * portal (or leaving the End) Minecraft has placed the player in the new dimension: the native
+	 * position still belongs to the old one, so it is ignored until ULTRAKILL has re-placed its player
+	 * at Minecraft's (EV_DIMENSION; the host stops sending teleports while it does, then starts again).
+	 */
+	private static boolean hostOwnsPosition(Minecraft minecraft) {
+		if (minecraft.level == null || !sky.inGame()) {
+			return false;
+		}
+		var dimension = minecraft.level.dimension();
+		if (dimension != lastDimension) {
+			boolean travelled = lastDimension != null;
+			lastDimension = dimension;
+			SkyLink.pushEvent(Proto.EV_DIMENSION, 0, dimensionCode(dimension), travelled ? 1 : 0, 0, 0, 0);
+			if (travelled) {
+				awaitingHostSince = System.currentTimeMillis();
+				SkyCraft.LOG.info("UltraCraft: travelled to {}; ULTRAKILL follows the player there", dimension);
+			}
+		}
+		if (awaitingHostSince != 0) {
+			// The host answers by dropping its teleport sequence to 0; an old host never does.
+			if (sky.teleportSeq == 0 || System.currentTimeMillis() - awaitingHostSince > 15000) {
+				awaitingHostSince = 0;
+			}
+			return false;
+		}
+		return sky.teleportSeq != 0;
+	}
+
+	private static int dimensionCode(net.minecraft.resources.ResourceKey<net.minecraft.world.level.Level> dimension) {
+		return dimension == net.minecraft.world.level.Level.OVERWORLD ? 0 : dimension == net.minecraft.world.level.Level.NETHER ? 1 : dimension == net.minecraft.world.level.Level.END ? 2 : 3;
+	}
+
 	/** Called at the end of every client tick. */
 	public static void clientTick(Minecraft minecraft) {
 		MirrorWorld.tick(minecraft);
@@ -225,7 +262,8 @@ public final class SkyClient {
 		freezeWhileUnlinked(minecraft);
 		if (!Boolean.getBoolean("ultracraft.hostMovement")) {
 			holdUntilReady(minecraft);
-		} else if (linked && minecraft.player != null && sky.inGame() && sky.teleportSeq != 0) {
+		} else if (linked && minecraft.player != null && hostOwnsPosition(minecraft)) {
+			final var dimension=minecraft.level.dimension();
 			final double x=sky.x, y=sky.y, z=sky.z;
 			final float yaw=sky.yaw,pitch=sky.pitch;
 			final boolean grounded=(sky.flags & Proto.SKY_GROUNDED) != 0;
@@ -234,7 +272,8 @@ public final class SkyClient {
 			var server=minecraft.getSingleplayerServer();
 			if (server != null) server.execute(() -> {
 				ServerPlayer sp=server.getPlayerList().getPlayer(playerId);
-				if (sp != null) { sp.noPhysics=true; sp.setNoGravity(true); sp.setPos(x,y,z); sp.setYRot(yaw); sp.setXRot(pitch); sp.setOnGround(grounded); sp.setDeltaMovement(Vec3.ZERO); sp.resetFallDistance(); sp.connection.resetPosition();
+				// A portal moves the server's player first: never pull it back to the old dimension's coordinates.
+				if (sp != null && sp.level().dimension() == dimension) { sp.noPhysics=true; sp.setNoGravity(true); sp.setPos(x,y,z); sp.setYRot(yaw); sp.setXRot(pitch); sp.setOnGround(grounded); sp.setDeltaMovement(Vec3.ZERO); sp.resetFallDistance(); sp.connection.resetPosition();
 					// Vanilla only re-centres chunk loading and entity tracking from movement packets, which
 					// are cancelled while native movement is authoritative: do it here instead.
 					sp.level().getChunkSource().move(sp); }

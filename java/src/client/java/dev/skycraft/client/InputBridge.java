@@ -65,6 +65,7 @@ public final class InputBridge {
 			case Proto.IN_RELEASE_ALL -> releaseAll();
 			case Proto.IN_HURT -> hurt(minecraft, code, a / 100.0F, b, c);
 			case Proto.IN_HIT_ENTITY -> hitEntity(minecraft, a, b / 100.0F, c / 100.0F);
+			case Proto.IN_PULL_ENTITY -> pullEntity(minecraft, a, b / 1000.0, (code - 32768) / 1000.0, c / 1000.0);
 			case Proto.IN_BREAK_BLOCK -> onServer(minecraft, player -> dev.skycraft.world.WeaponMining.damage(player, new net.minecraft.core.BlockPos(a, b, c), (code & 0xFFF) / 100.0F, (code & 0x1000) != 0));
 			case Proto.IN_BLAST -> onServer(minecraft, player -> dev.skycraft.world.WeaponMining.blast(player, a / 100.0, b / 100.0, c / 100.0, code / 100.0F));
 			case Proto.IN_OPEN_MENU -> {
@@ -105,6 +106,27 @@ public final class InputBridge {
 				float r = yaw * net.minecraft.util.Mth.DEG_TO_RAD;
 				target.knockback(0.4, net.minecraft.util.Mth.sin(r), -net.minecraft.util.Mth.cos(r), source, damage);
 			}
+		});
+	}
+
+	/**
+	 * The Whiplash is yanking a small Minecraft mob towards the player: ULTRAKILL sends the velocity
+	 * (blocks per tick) every physics step while it pulls, the last one zero when it arrives.
+	 */
+	private static void pullEntity(Minecraft minecraft, int id, double vx, double vy, double vz) {
+		var server = minecraft.getSingleplayerServer();
+		if (server == null || minecraft.player == null) {
+			return;
+		}
+		var uuid = minecraft.player.getUUID();
+		server.execute(() -> {
+			ServerPlayer player = server.getPlayerList().getPlayer(uuid);
+			if (player == null || !(player.level().getEntity(id) instanceof net.minecraft.world.entity.LivingEntity target) || !target.isAlive()) {
+				return;
+			}
+			target.setDeltaMovement(vx, vy, vz);
+			target.syncVelocity = true; // send the new velocity to the client this tick
+			target.resetFallDistance();
 		});
 	}
 

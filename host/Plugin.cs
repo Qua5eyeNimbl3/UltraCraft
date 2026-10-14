@@ -14,7 +14,7 @@ using UltraCraft.Render;
 using UltraCraft.World;
 using Object=UnityEngine.Object;
 namespace UltraCraft;
-[BepInPlugin("local.ultracraft.bridge","UltraCraft","0.1.7")]
+[BepInPlugin("local.ultracraft.bridge","UltraCraft","0.1.8")]
 [DefaultExecutionOrder(1000)]
 public sealed class Plugin:BaseUnityPlugin {
     internal static Plugin? Instance;
@@ -33,7 +33,9 @@ public sealed class Plugin:BaseUnityPlugin {
     Vector3 spawn,adoptCandidate,lastSafe,prevFeet;
     float adoptWaitStart=-1,respawnSince=-1,lostSince=-1;
     int guardGrace;
-    bool hasCamp;
+    // Camp (H) per Minecraft dimension: where the session started there, or where its portal let you out.
+    readonly System.Collections.Generic.Dictionary<int,Vector3> camps=new();
+    int dimension;
     float adoptSince;
     ShopZone? terminal;
     GameObject? heldWeapon;
@@ -77,6 +79,10 @@ public sealed class Plugin:BaseUnityPlugin {
           // Minecraft killed its player (void, lava, a mob...): let its respawn happen, then follow it.
           respawnSince=Time.realtimeSinceStartup;Logger.LogInfo("UltraCraft: Java player died; following Minecraft's respawn");
         }
+        // A Nether/End portal: Minecraft placed its player in the new dimension; stop sending the old
+        // position (teleportSeq drops to 0) and place the native player at Minecraft's once its terrain is in.
+        if(ev.type==Proto.EvDimension)dimension=(int)ev.a;
+        if(ev.type==Proto.EvDimension&&ev.b>0.5f&&adopted){adopted=false;adoptWaitStart=-1;respawnSince=-1;Logger.LogInfo($"UltraCraft: Minecraft changed dimension ({ev.a}); following it");}
         if(!adopted||nm==null)continue;
         if(ev.type==Proto.EvHitActor)combat.HitActor(ev);
         else if(ev.type==Proto.EvTime){javaDayTime=ev.a;lighting.SetTime(ev.a);}
@@ -104,7 +110,8 @@ public sealed class Plugin:BaseUnityPlugin {
         if(ground&&(hit.point-adoptCandidate).sqrMagnitude>.01f){adoptCandidate=hit.point;adoptSince=Time.realtimeSinceStartup;}
         if(ground&&loaded&&(near||waited>45)&&Time.realtimeSinceStartup-adoptSince>1.5f){
           if(hit.point.y<target.y-1)target=hit.point;
-          if(!hasCamp){spawn=target;hasCamp=true;} // camp (H) stays where the session started
+          if(!camps.ContainsKey(dimension))camps[dimension]=target; // camp (H) stays where you first stood in this dimension
+          spawn=camps[dimension];
           float center=nm.transform.position.y-nm.playerCollider.bounds.min.y;
           nm.rb.position=target+Vector3.up*(center+.1f);Stop(nm.rb);adopted=true;lastSafe=prevFeet=target;guardGrace=15;
           screens.Adopt(nm);hadScreen=false;lighting.Install();
